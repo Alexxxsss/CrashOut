@@ -1,7 +1,0 @@
-<Solution>
-  <Configurations>
-    <Platform Name="x64" />
-  </Configurations>
-  <Project Path="CrashOut/CrashOut.vcxproj" Id="4e68b8fc-0dd9-42aa-a6d1-8f8b1ab08a46" />
-  <Project Path="Sandbox/Sandbox.vcxproj" Id="6739c2f8-9783-43d3-8086-f36c140c1e14" />
-</Solution>
