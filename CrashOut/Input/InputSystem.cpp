@@ -1,4 +1,4 @@
-#include "InputHandler.h"
+#include "InputSystem.h"
 #include <windowsx.h> 
 
 bool InputSystem::InputHandler::UpdateEvents(UINT aMessage, WPARAM aWParam, LPARAM aLParam)
