@@ -2,7 +2,7 @@
 #include <iostream>
 int main()
 {
-	std::cout << "Initial Startup!" << std::endl;
+	std::cout << "Startup Successful!" << std::endl;
 	Window window;
 
 	window.StartUpWindow();
