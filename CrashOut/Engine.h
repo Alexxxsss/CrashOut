@@ -1,7 +1,3 @@
 #pragma once
 
-
-class Test
-{
-	Test();
-};
+#include "Core/Window.h"
