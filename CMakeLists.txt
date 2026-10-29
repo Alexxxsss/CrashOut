@@ -1,10 +1,14 @@
 cmake_minimum_required(VERSION 3.20)
-project(CrashOutSolution CXX)
+project(CrashOutRoot LANGUAGES CXX)
 
-# Set C++ standard (modify to 20 if you are using C++20)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Add your subprojects
+# Output directories
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/$<CONFIG>)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/$<CONFIG>)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/$<CONFIG>)
+
+# Pull in your subfolders
 add_subdirectory(CrashOut)
 add_subdirectory(Sandbox)
