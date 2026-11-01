@@ -6,6 +6,8 @@ class Window
 {
 public: 
 	void StartUpWindow();
+	void UpdateOpenWindow();
+    HWND& GetHwnd() { return myHwnd; }
 
 private:
     //MUST be static so it matches WNDCLASSW's function pointer requirement

@@ -31,35 +31,41 @@ void Window::StartUpWindow() {
 
     RegisterClassW(&wc);
 
-    HWND hwnd = CreateWindowExW(
+    myHwnd = CreateWindowExW(
         0, CLASS_NAME, L"Window Title",
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
         NULL, NULL, hInstance, NULL
     );
 
-    if (hwnd == NULL) {
+    if (myHwnd == NULL) {
         std::cerr << "Failed to create window!" << std::endl;
         return;
     }
 
-    ShowWindow(hwnd, SW_SHOWDEFAULT);
+    ShowWindow(myHwnd, SW_SHOWDEFAULT);
     std::cout << "Window displayed successfully." << std::endl;
 
+
+    
+    
+}
+
+void Window::UpdateOpenWindow()
+{
     MSG msg = {};
+
     bool isRunning = true;
 
-    while (isRunning) {
-        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-            if (msg.message == WM_QUIT) {
-                isRunning = false;
-                break;
-            }
-
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+    {
+        if (msg.message == WM_QUIT)
+        {
+            break;
         }
+
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
     }
     
-
 }
