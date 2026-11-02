@@ -1,0 +1,44 @@
+{
+  "scene": "MainLevel",
+  "entities": [
+    {
+      "entity_id": 1,
+      "name": "CameraEntity",
+      "components": {
+        "Transform": {
+          "position": [ 0.0, 2.0, -5.0 ],
+          "rotation": [ 0.0, 0.0, 0.0 ],
+          "scale": [ 1.0, 1.0, 1.0 ]
+        },
+        "Camera": {
+          "fov": 45.0,
+          "near_plane": 0.1,
+          "far_plane": 100.0,
+          "is_primary": true
+        }
+      }
+    },
+    {
+      "entity_id": 2,
+      "name": "Player",
+      "components": {
+        "Transform": {
+          "position": [ 0.0, 0.0, 0.0 ],
+          "rotation": [ 0.0, 0.0, 0.0 ],
+          "scale": [ 1.0, 1.0, 1.0 ]
+        },
+        "MeshRenderer": {
+          "mesh_path": "assets/models/cube.obj",
+          "material_path": "assets/materials/player.mat"
+        },
+        "RigidBody": {
+          "type": "Dynamic",
+          "mass": 1.0
+        },
+        "NativeScript": {
+          "script_class": "PlayerController"
+        }
+      }
+    }
+  ]
+}

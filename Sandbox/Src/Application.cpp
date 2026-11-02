@@ -14,6 +14,11 @@ void OnUpdate()
 
 }
 
+void OnRenderFrame()
+{
+
+}
+
 // Här rensar du spelspecifikt minne om det behövs
 void OnCleanUp()
 {
