@@ -1,45 +1,34 @@
 #pragma once
 #include <windows.h>
 #include <d3d11.h>
-#include <d3dcompiler.h>
-#include <DirectXMath.h>
-#include <wrl/client.h>
+#include <wrl/client.h> // For Microsoft::WRL::ComPtr
 
-struct Vertex
-{
-    DirectX::XMFLOAT3 position;
-    DirectX::XMFLOAT3 color;
-};
+// Link required DirectX libraries (or link them in your CMakeLists.txt)
+#pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "dxgi.lib")
+
+using Microsoft::WRL::ComPtr;
 
 class Renderer
 {
 public:
+    Renderer() = default;
+    ~Renderer() = default;
+
     bool Initialize(HWND hwnd, UINT width, UINT height);
-    void BeginFrame(float r, float g, float b);
-    void UpdateTransform(const DirectX::XMMATRIX& worldViewProj);
-    void DrawCube();
+    void BeginFrame(float r = 0.1f, float g = 0.2f, float b = 0.4f, float a = 1.0f);
     void EndFrame();
     void CleanUp();
 
+    // Getters for when you start drawing triangles & shaders
+    ID3D11Device* GetDevice() const { return m_device.Get(); }
+    ID3D11DeviceContext* GetContext() const { return m_deviceContext.Get(); }
+
 private:
-    bool CreateDeviceAndSwapChain(HWND hwnd, UINT width, UINT height);
-    bool CreateRenderTargetAndDepth(UINT width, UINT height);
-    bool CreateShadersAndInputLayout();
-    bool CreateBuffers();
+    ComPtr<ID3D11Device> m_device;
+    ComPtr<ID3D11DeviceContext> m_deviceContext;
+    ComPtr<IDXGISwapChain> m_swapChain;
+    ComPtr<ID3D11RenderTargetView> m_renderTargetView;
 
-    Microsoft::WRL::ComPtr<ID3D11Device>           m_device;
-    Microsoft::WRL::ComPtr<ID3D11DeviceContext>    m_context;
-    Microsoft::WRL::ComPtr<IDXGISwapChain>         m_swapChain;
-    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_renderTargetView;
-    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_depthStencilView;
-
-    Microsoft::WRL::ComPtr<ID3D11VertexShader>     m_vertexShader;
-    Microsoft::WRL::ComPtr<ID3D11PixelShader>      m_pixelShader;
-    Microsoft::WRL::ComPtr<ID3D11InputLayout>      m_inputLayout;
-
-    Microsoft::WRL::ComPtr<ID3D11Buffer>           m_vertexBuffer;
-    Microsoft::WRL::ComPtr<ID3D11Buffer>           m_indexBuffer;
-    Microsoft::WRL::ComPtr<ID3D11Buffer>           m_constantBuffer;
-
-    D3D11_VIEWPORT                                 m_viewport = {};
+    D3D11_VIEWPORT m_viewport = {};
 };

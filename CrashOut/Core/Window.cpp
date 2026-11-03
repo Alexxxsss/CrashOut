@@ -1,71 +1,67 @@
 #include "Window.h"
 #include <iostream>
 
-LRESULT CALLBACK Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    switch (uMsg) {
-    case WM_DESTROY:
+LRESULT CALLBACK Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
     {
+    case WM_DESTROY:
         std::cout << "Window is closing..." << std::endl;
-        PostQuitMessage(0); 
+        PostQuitMessage(0);
         return 0;
-    }
     default:
         return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
 }
 
-
-
-void Window::StartUpWindow() {
-    
+bool Window::StartUpWindow(int width, int height, const wchar_t* title)
+{
+    myWidth = width;
+    myHeight = height;
     HINSTANCE hInstance = GetModuleHandle(NULL);
-
-    std::cout << "Console is open automatically. App starting..." << std::endl;
 
     const wchar_t CLASS_NAME[] = L"Sample Window Class";
 
     WNDCLASSW wc = {};
-    wc.lpfnWndProc = Window::WindowProc; 
+    wc.lpfnWndProc = Window::WindowProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = CLASS_NAME;
 
     RegisterClassW(&wc);
 
+    // Adjust window rect so the CLIENT area is exactly width x height
+    RECT wr = { 0, 0, width, height };
+    AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);
+
     myHwnd = CreateWindowExW(
-        0, CLASS_NAME, L"Window Title",
+        0, CLASS_NAME, title,
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+        CW_USEDEFAULT, CW_USEDEFAULT,
+        wr.right - wr.left, wr.bottom - wr.top,
         NULL, NULL, hInstance, NULL
     );
 
-    if (myHwnd == NULL) {
+    if (myHwnd == NULL)
+    {
         std::cerr << "Failed to create window!" << std::endl;
-        return;
+        return false;
     }
 
     ShowWindow(myHwnd, SW_SHOWDEFAULT);
-    std::cout << "Window displayed successfully." << std::endl;
-
-
-    
-    
+    return true;
 }
 
-void Window::UpdateOpenWindow()
+bool Window::UpdateOpenWindow()
 {
     MSG msg = {};
-
-    bool isRunning = true;
-
     while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
     {
         if (msg.message == WM_QUIT)
         {
-            break;
+            return false; // Signal that the application should exit
         }
-
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
-    
+    return true;
 }
