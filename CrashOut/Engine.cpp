@@ -3,6 +3,7 @@
 
 #include "Core/Window.h"
 #include "Renderer/Renderer.h"
+#include "Input/InputSystem.h"
 
 using namespace DirectX; // Allows using XMMATRIX, XMVECTOR, etc. without typing DirectX:: every time
 
@@ -46,6 +47,9 @@ int main()
         // ---> YOUR DRAW TRIANGLE CODE GOES HERE <---
 
         renderer.EndFrame();
+
+        if (window.GetInputHandeler()->IsKeyPressed('W')) { std::cout << "WWW PRESSED\n"; }
+
 
     }
     renderer.CleanUp();

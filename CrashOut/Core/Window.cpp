@@ -1,8 +1,13 @@
 #include "Window.h"
 #include <iostream>
+#include <Input/InputSystem.h>
+
+CommonUtilities::InputHandler *globalInputHandeler;
 
 LRESULT CALLBACK Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    globalInputHandeler->UpdateEvents(uMsg, wParam, lParam);
+
     switch (uMsg)
     {
     case WM_DESTROY:
@@ -48,11 +53,14 @@ bool Window::StartUpWindow(int width, int height, const wchar_t* title)
     }
 
     ShowWindow(myHwnd, SW_SHOWDEFAULT);
+    globalInputHandeler = new CommonUtilities::InputHandler(myHwnd);
+    myInputHandeler = globalInputHandeler;
     return true;
 }
 
 bool Window::UpdateOpenWindow()
 {
+    globalInputHandeler->UpdateInput();
     MSG msg = {};
     while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
     {

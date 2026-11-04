@@ -1,9 +1,14 @@
 #pragma once
 #include <windows.h>
+namespace CommonUtilities {
+    class InputHandler;
+}
+
 
 class Window
 {
 public:
+
     Window() = default;
     ~Window() = default;
 
@@ -14,8 +19,11 @@ public:
     int GetWidth() const { return myWidth; }
     int GetHeight() const { return myHeight; }
 
+    CommonUtilities::InputHandler* GetInputHandeler() { return myInputHandeler; }
+
 private:
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    CommonUtilities::InputHandler* myInputHandeler;
 
     HWND myHwnd = nullptr;
     int myWidth = 800;

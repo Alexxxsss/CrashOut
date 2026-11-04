@@ -11,7 +11,7 @@ void OnStart()
 // Här läser du input och flyttar spelfigurer via motorns API
 void OnUpdate()
 {
-
+    
 }
 
 void OnRenderFrame()
