@@ -3,9 +3,11 @@
 
 #include "Core/Window.h"
 #include "Renderer/Renderer.h"
+#include "Renderer/Shader.h"
+#include "Renderer/Model.h"
 #include "Input/InputSystem.h"
 
-using namespace DirectX; // Allows using XMMATRIX, XMVECTOR, etc. without typing DirectX:: every time
+using namespace DirectX; 
 
 extern void OnStart();
 extern void OnUpdate();
@@ -16,6 +18,7 @@ int main()
     OnStart();
 
 
+    // Initialize Window with size
     const UINT screenWidth = 1080;
     const UINT screenHeight = 720;
 
@@ -26,13 +29,25 @@ int main()
     }
     HWND hwnd = window.GetHwnd();
 
+
+
     // Initialize Renderer with window handle and size
     Renderer renderer;
+
     if (!renderer.Initialize(window.GetHwnd(), screenWidth, screenHeight))
     {
         std::cerr << "Renderer initialization failed!" << std::endl;
         return -1;
     }
+
+    Shader shader(&renderer);
+    Model model(&renderer);
+
+    model.Create();
+
+    shader.LoadPixelShader("../../CrashOut/Shaders/Pixel.hlsl");
+    shader.LoadVertexShader("../../CrashOut/Shaders/Vertex.hlsl");
+
 
 
     bool isRunning = true;
@@ -43,13 +58,14 @@ int main()
         OnUpdate();
 
         renderer.BeginFrame(0.1f, 0.2f, 0.4f, 1.0f);
-
-        // ---> YOUR DRAW TRIANGLE CODE GOES HERE <---
-
+        
+        shader.Use();
+        
+        model.Render();
+        
         renderer.EndFrame();
 
         if (window.GetInputHandeler()->IsKeyPressed('W')) { std::cout << "WWW PRESSED\n"; }
-
 
     }
     renderer.CleanUp();

@@ -8,3 +8,10 @@ add_library(CrashOut STATIC ${CRASHOUT_SOURCES})
 target_include_directories(CrashOut PUBLIC 
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
+
+target_link_libraries(CrashOut PUBLIC
+    d3d11
+    d3dcompiler
+    dxgi
+)
+

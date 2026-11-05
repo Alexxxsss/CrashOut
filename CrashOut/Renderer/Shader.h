@@ -1,0 +1,29 @@
+#pragma once
+#include <iostream>
+#include <string>
+#include <wrl/client.h>
+#include <d3d11.h>
+
+class Renderer;
+
+class Shader
+{
+public:
+	Shader(Renderer* renderer);
+	virtual ~Shader();
+
+	// Create vertex shader
+	void LoadVertexShader(const std::string& vertex_shader_path);
+
+	// Create pixel shader
+	void LoadPixelShader(const std::string& pixel_shader_path);
+
+	// Bind the shader to the pipeline
+	void Use();
+
+private:
+	Renderer* myRenderer;
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> myVertexShader;
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> myVertexLayout;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> myPixelShader;
+};

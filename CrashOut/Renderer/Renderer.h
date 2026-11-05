@@ -2,12 +2,18 @@
 #include <windows.h>
 #include <d3d11.h>
 #include <wrl/client.h> // For Microsoft::WRL::ComPtr
+#include <d3dcompiler.h>
+#include <iostream>
+
 
 // Link required DirectX libraries (or link them in your CMakeLists.txt)
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "d3dcompiler.lib")
+
 
 using Microsoft::WRL::ComPtr;
+
 
 class Renderer
 {
@@ -32,3 +38,14 @@ private:
 
     D3D11_VIEWPORT m_viewport = {};
 };
+
+namespace DX
+{
+    inline void Check(HRESULT hr)
+    {
+        if (FAILED(hr))
+        {
+            throw std::runtime_error("DirectX-anrop misslyckades!");
+        }
+    }
+}
