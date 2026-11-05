@@ -26,7 +26,7 @@ int main()
     }
     HWND hwnd = window.GetHwnd();
 
-    // 2. Initialize Renderer with window handle and size
+    // Initialize Renderer with window handle and size
     Renderer renderer;
     if (!renderer.Initialize(window.GetHwnd(), screenWidth, screenHeight))
     {
