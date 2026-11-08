@@ -3,6 +3,9 @@
 #include <iostream>
 #include <string>
 #include <d3dcompiler.h>
+#include "Camera.h"
+#include <DirectXMath.h>
+
 
 Shader::Shader(Renderer* renderer) : myRenderer(renderer) {}
 
@@ -50,8 +53,10 @@ void Shader::LoadVertexShader(const std::string& vertex_shader_path)
 
     D3D11_INPUT_ELEMENT_DESC layout[] =
     {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "TEXTURE", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
+
 
     DX::Check(device->CreateInputLayout(
         layout,
@@ -105,6 +110,40 @@ void Shader::LoadPixelShader(const std::string& pixel_shader_path)
 
     psBlob->Release();
 }
+
+
+void Shader::CreateWorldViewProjectionConstantBuffer()
+{
+    ID3D11Device* device = myRenderer->GetDevice();
+
+    // Create world constant buffer
+    D3D11_BUFFER_DESC bd = {};
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(ModelViewProjectionBuffer);
+    bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+
+    DX::Check(device->CreateBuffer(&bd, nullptr, myModelViewProjectionConstantBuffer.ReleaseAndGetAddressOf()));
+
+
+
+    ID3D11DeviceContext* context = myRenderer->GetContext();
+
+    const int constant_buffer_slot = 0;
+    context->VSSetConstantBuffers(constant_buffer_slot, 1, myModelViewProjectionConstantBuffer.GetAddressOf());
+
+}
+
+void Shader::UpdateModelViewProjectionBuffer(DirectX::XMMATRIX matrix)
+{
+    ModelViewProjectionBuffer buffer = {};
+    buffer.modelViewProjection = DirectX::XMMatrixTranspose(matrix);
+
+    ID3D11DeviceContext* context = myRenderer->GetContext();
+    context->UpdateSubresource(myModelViewProjectionConstantBuffer.Get(), 0, nullptr, &buffer, 0, 0);
+}
+
+
+
 
 void Shader::Use()
 {

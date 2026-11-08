@@ -4,14 +4,19 @@
 #include "Core/Window.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/Shader.h"
+#include "Renderer/RasterState.h"
 #include "Renderer/Model.h"
+#include "Renderer/Camera.h"
 #include "Input/InputSystem.h"
+
 
 using namespace DirectX; 
 
 extern void OnStart();
 extern void OnUpdate();
 extern void OnCleanUp();
+void ComputeModelViewProjectionMatrix(Camera& aCamera, Shader& aShader);
+
 
 int main()
 {
@@ -41,26 +46,42 @@ int main()
     }
 
     Shader shader(&renderer);
+    RasterState rasterState(&renderer);
     Model model(&renderer);
-
+    Camera camera(1080, 720);
     model.Create();
 
+    rasterState.ToggleWireframe();
     shader.LoadPixelShader("../../CrashOut/Shaders/Pixel.hlsl");
     shader.LoadVertexShader("../../CrashOut/Shaders/Vertex.hlsl");
+    shader.CreateWorldViewProjectionConstantBuffer();
 
 
 
     bool isRunning = true;
-
+    bool wasTogglePressed = false;
     while (isRunning)
     {
         window.UpdateOpenWindow();
         OnUpdate();
 
+
+
+        bool isToggleDown = window.GetInputHandeler()->IsKeyPressed('T');
+        if (isToggleDown && !wasTogglePressed) // Trigger only once per keypress
+        {
+            rasterState.ToggleWireframe();
+        }
+        wasTogglePressed = isToggleDown;
+
+
+
+
         renderer.BeginFrame(0.1f, 0.2f, 0.4f, 1.0f);
         
         shader.Use();
-        
+        rasterState.Use();
+        ComputeModelViewProjectionMatrix(camera, shader);
         model.Render();
         
         renderer.EndFrame();
@@ -71,4 +92,15 @@ int main()
     renderer.CleanUp();
     OnCleanUp();
     return 0;
+}
+
+
+
+void ComputeModelViewProjectionMatrix(Camera& aCamera, Shader& aShader)
+{
+    DirectX::XMMATRIX matrix = DirectX::XMMatrixIdentity();
+    matrix *= aCamera.GetView();
+    matrix *= aCamera.GetProjection();
+
+    aShader.UpdateModelViewProjectionBuffer(matrix);
 }
