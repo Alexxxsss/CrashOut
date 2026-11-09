@@ -1,5 +1,7 @@
 #include "Renderer.h"
 #include "TextureSampler.h"
+#include "../External/WICTextureLoader11.h"
+
 
 TextureSampler::TextureSampler(Renderer* renderer) : myRenderer(renderer) {}
 
@@ -28,4 +30,25 @@ void TextureSampler::Use()
 
 	const int sampler_slot = 0;
 	context->PSSetSamplers(sampler_slot, 1, m_SamplerState.GetAddressOf());
+}
+
+ID3D11ShaderResourceView* TextureSampler::LoadTextureFromFile(ID3D11Device* device, const std::wstring& filePath)
+{
+	ID3D11ShaderResourceView* srv = nullptr;
+
+	HRESULT hr = DirectX::CreateWICTextureFromFile(
+		device,
+		filePath.c_str(),
+		nullptr, // We don't need the ID3D11Resource* pointer directly
+		&srv
+	);
+
+	if (FAILED(hr))
+	{
+		// Helpful debug output if path is wrong or format unsupported
+		std::wcout << L"[TextureSampler] Failed to load texture: " << filePath << std::endl;
+		return nullptr;
+	}
+
+	return srv;
 }
