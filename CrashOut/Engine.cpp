@@ -46,12 +46,13 @@ int main()
     }
 
     Shader shader(&renderer);
-    RasterState rasterState(&renderer);
     Model model(&renderer);
     Camera camera(1080, 720);
-    model.Create();
+    RasterState rasterState(&renderer);
 
-    rasterState.ToggleWireframe();
+    model.Create();
+    model.LoadTexture();
+
     shader.LoadPixelShader("../../CrashOut/Shaders/Pixel.hlsl");
     shader.LoadVertexShader("../../CrashOut/Shaders/Vertex.hlsl");
     shader.CreateWorldViewProjectionConstantBuffer();
@@ -59,7 +60,6 @@ int main()
 
 
     bool isRunning = true;
-    bool wasTogglePressed = false;
     while (isRunning)
     {
         window.UpdateOpenWindow();
@@ -67,27 +67,20 @@ int main()
 
 
 
-        bool isToggleDown = window.GetInputHandeler()->IsKeyPressed('T');
-        if (isToggleDown && !wasTogglePressed) // Trigger only once per keypress
-        {
-            rasterState.ToggleWireframe();
-        }
-        wasTogglePressed = isToggleDown;
-
-
-
-
         renderer.BeginFrame(0.1f, 0.2f, 0.4f, 1.0f);
-        
+
+        // 1. Bind pipeline states & shaders
         shader.Use();
         rasterState.Use();
         ComputeModelViewProjectionMatrix(camera, shader);
+
+
+        model.UseTexture();
         model.Render();
-        
+
         renderer.EndFrame();
 
         if (window.GetInputHandeler()->IsKeyPressed('W')) { std::cout << "WWW PRESSED\n"; }
-
     }
     renderer.CleanUp();
     OnCleanUp();

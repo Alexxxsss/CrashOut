@@ -6,7 +6,7 @@
 class Renderer;
 struct ID3D11Buffer;
 struct ID3D11ShaderResourceView;
-struct ID3D11ShaderResourceView;
+struct ID3D11SamplerState;
 
 struct VertexPosition
 {
@@ -52,6 +52,7 @@ public:
 
     void Render();
 	void LoadTexture();
+	void UseTexture();
 
 
 private:
@@ -61,6 +62,6 @@ private:
     uint32_t myVertexCount = 0;
     Microsoft::WRL::ComPtr<ID3D11Buffer> myVertexBuffer;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_DiffuseTexture = nullptr;
-
+	Microsoft::WRL::ComPtr<ID3D11SamplerState>       mySamplerState;
     Renderer* myRenderer = nullptr; 
 };

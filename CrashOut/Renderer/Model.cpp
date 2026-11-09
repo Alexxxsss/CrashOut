@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <filesystem>
-#include "../External/WICTextureLoader.h"
+#include "../External/WICTextureLoader11.h"
 
 
 
@@ -22,10 +22,41 @@ void Model::Create()
 	// Vertex data
 	std::vector<Vertex> vertices =
 	{
-		{ VertexPosition(-0.5f, +0.5f, 0.0f), VertexTextureUV(0.0f, 1.0f) }, // Top left vertex
-		{ VertexPosition(+0.5f, +0.5f, 0.0f), VertexTextureUV(1.0f, 1.0f) }, // Top right vertex
-		{ VertexPosition(+0.5f, -0.5f, 0.0f), VertexTextureUV(1.0f, 0.0f) }, // Bottom Right vertex
-		{ VertexPosition(-0.5f, -0.5f, 0.0f), VertexTextureUV(0.0f, 0.0f) }, // Bottom left vertex
+		// Front Face (Z = +0.5)
+		{ VertexPosition(-0.5f, +0.5f, +0.5f), VertexTextureUV(0.0f, 0.0f) }, // Top left
+		{ VertexPosition(+0.5f, +0.5f, +0.5f), VertexTextureUV(1.0f, 0.0f) }, // Top right
+		{ VertexPosition(+0.5f, -0.5f, +0.5f), VertexTextureUV(1.0f, 1.0f) }, // Bottom right
+		{ VertexPosition(-0.5f, -0.5f, +0.5f), VertexTextureUV(0.0f, 1.0f) }, // Bottom left
+
+		// Back Face (Z = -0.5)
+		{ VertexPosition(+0.5f, +0.5f, -0.5f), VertexTextureUV(0.0f, 1.0f) }, // Top left (from back view)
+		{ VertexPosition(-0.5f, +0.5f, -0.5f), VertexTextureUV(1.0f, 1.0f) }, // Top right
+		{ VertexPosition(-0.5f, -0.5f, -0.5f), VertexTextureUV(1.0f, 0.0f) }, // Bottom right
+		{ VertexPosition(+0.5f, -0.5f, -0.5f), VertexTextureUV(0.0f, 0.0f) }, // Bottom left
+
+		// Left Face (X = -0.5)
+		{ VertexPosition(-0.5f, +0.5f, -0.5f), VertexTextureUV(0.0f, 1.0f) }, // Top left
+		{ VertexPosition(-0.5f, +0.5f, +0.5f), VertexTextureUV(1.0f, 1.0f) }, // Top right
+		{ VertexPosition(-0.5f, -0.5f, +0.5f), VertexTextureUV(1.0f, 0.0f) }, // Bottom right
+		{ VertexPosition(-0.5f, -0.5f, -0.5f), VertexTextureUV(0.0f, 0.0f) }, // Bottom left
+
+		// Right Face (X = +0.5)
+		{ VertexPosition(+0.5f, +0.5f, +0.5f), VertexTextureUV(0.0f, 1.0f) }, // Top left
+		{ VertexPosition(+0.5f, +0.5f, -0.5f), VertexTextureUV(1.0f, 1.0f) }, // Top right
+		{ VertexPosition(+0.5f, -0.5f, -0.5f), VertexTextureUV(1.0f, 0.0f) }, // Bottom right
+		{ VertexPosition(+0.5f, -0.5f, +0.5f), VertexTextureUV(0.0f, 0.0f) }, // Bottom left
+
+		// Top Face (Y = +0.5)
+		{ VertexPosition(-0.5f, +0.5f, -0.5f), VertexTextureUV(0.0f, 1.0f) }, // Top left
+		{ VertexPosition(+0.5f, +0.5f, -0.5f), VertexTextureUV(1.0f, 1.0f) }, // Top right
+		{ VertexPosition(+0.5f, +0.5f, +0.5f), VertexTextureUV(1.0f, 0.0f) }, // Bottom right
+		{ VertexPosition(-0.5f, +0.5f, +0.5f), VertexTextureUV(0.0f, 0.0f) }, // Bottom left
+
+		// Bottom Face (Y = -0.5)
+		{ VertexPosition(-0.5f, -0.5f, +0.5f), VertexTextureUV(0.0f, 1.0f) }, // Top left
+		{ VertexPosition(+0.5f, -0.5f, +0.5f), VertexTextureUV(1.0f, 1.0f) }, // Top right
+		{ VertexPosition(+0.5f, -0.5f, -0.5f), VertexTextureUV(1.0f, 0.0f) }, // Bottom right
+		{ VertexPosition(-0.5f, -0.5f, -0.5f), VertexTextureUV(0.0f, 0.0f) }  // Bottom left
 	};
 
 
@@ -50,20 +81,20 @@ void Model::CreateIndexBuffer()
 	ID3D11Device* device = myRenderer->GetDevice();
 
 	// Set Indices
-	std::vector<UINT> indices =
+	std::vector<unsigned int> indices =
 	{
-		0, 1, 2,
-		0, 2, 3,
-		4, 5, 6,
-		4, 6, 7,
-		8, 9, 10,
-		8, 10, 11,
-		12, 13, 14,
-		12, 14, 15,
-		16, 17, 18,
-		16, 18, 19,
-		20, 21, 22,
-		20, 22, 23,
+		// Front Face
+		0, 1, 2,  2, 3, 0,
+		// Back Face
+		4, 5, 6,  6, 7, 4,
+		// Left Face
+		8, 9, 10, 10, 11, 8,
+		// Right Face
+		12, 13, 14, 14, 15, 12,
+		// Top Face
+		16, 17, 18, 18, 19, 16,
+		// Bottom Face
+		20, 21, 22, 22, 23, 20
 	};
 
 	myIndexCount = static_cast<UINT>(indices.size());
@@ -106,7 +137,7 @@ void Model::Render()
 void Model::LoadTexture()
 {
 	
-	std::wstring path = L"Wood_Crate_001_basecolor.png";
+	std::wstring path = L"PrototypeTexture.png";
 
 	// Check if file exists
 	if (!std::filesystem::exists(path))
@@ -122,4 +153,26 @@ void Model::LoadTexture()
 
 	ComPtr<ID3D11Resource> resource = nullptr;
 	DX::Check(DirectX::CreateWICTextureFromFile(device, context, path.c_str(), resource.ReleaseAndGetAddressOf(), m_DiffuseTexture.ReleaseAndGetAddressOf()));
+
+	D3D11_SAMPLER_DESC desc = {};
+	desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	desc.MinLOD = 0;
+	desc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	DX::Check(device->CreateSamplerState(&desc, mySamplerState.ReleaseAndGetAddressOf()));
+
+}
+
+
+void Model::UseTexture()
+{
+	ID3D11DeviceContext* context = myRenderer->GetContext();
+
+	// Bind m_DiffuseTexture instead of myTextureView
+	context->PSSetShaderResources(0, 1, m_DiffuseTexture.GetAddressOf());
+	context->PSSetSamplers(0, 1, mySamplerState.GetAddressOf());
 }
