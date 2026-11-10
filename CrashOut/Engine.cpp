@@ -85,7 +85,7 @@ int main()
         window.UpdateOpenWindow();
         OnUpdate();
 
-        if (window.GetInputHandeler()->IsKeyDown('W'))
+        if (window.GetInputHandeler()->IsKeyDown('R'))
         {
             t1.rotation.y += 0.5f * deltaTime;
             t2.rotation.x += 1.f * deltaTime;
