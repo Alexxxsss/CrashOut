@@ -1,23 +1,12 @@
 #include <iostream>
 #include <DirectXMath.h> 
+#include "Engine.h"
 
-#include "Core/Window.h"
-#include "Renderer/Renderer.h"
-#include "Renderer/Shader.h"
-#include "Renderer/RasterState.h"
-#include "Renderer/Model.h"
-#include "Renderer/Camera.h"
-#include "Renderer/TextureSampler.h"
-#include "Input/InputSystem.h"
-#include "External/Timer.h"
-
-#include "Ecs/Registry.h"
-#include "Ecs/Components.h"
 
 using namespace DirectX;
 
 extern void OnStart();
-extern void OnUpdate();
+extern void OnUpdate(float& aDeltaTime, CommonUtilities::InputHandler* aInputHandler);
 extern void OnCleanUp();
 
 void RenderEntities(Registry& aRegistry, Camera& aCamera, Shader& aShader, Model& aDefaultModel);
@@ -83,7 +72,7 @@ int main()
     while (isRunning)
     {
         window.UpdateOpenWindow();
-        OnUpdate();
+        OnUpdate(deltaTime, window.GetInputHandeler());
 
         if (window.GetInputHandeler()->IsKeyDown('R'))
         {

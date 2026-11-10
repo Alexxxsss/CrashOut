@@ -9,9 +9,10 @@ void OnStart()
 
 // Här anropar du motorns renderingsfunktioner
 // Här läser du input och flyttar spelfigurer via motorns API
-void OnUpdate()
+void OnUpdate(float& aDeltaTime, CommonUtilities::InputHandler* aInputHandler)
 {
-    
+    aDeltaTime;
+    aInputHandler;
 }
 
 void OnRenderFrame()
