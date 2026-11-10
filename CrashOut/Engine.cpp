@@ -1,5 +1,5 @@
 #include <iostream>
-#include <DirectXMath.h> // Needed for 3D math (matrices/vectors)
+#include <DirectXMath.h> 
 
 #include "Core/Window.h"
 #include "Renderer/Renderer.h"
@@ -9,8 +9,8 @@
 #include "Renderer/Camera.h"
 #include "Renderer/TextureSampler.h"
 #include "Input/InputSystem.h"
+#include "External/Timer.h"
 
-// ECS Headers
 #include "Ecs/Registry.h"
 #include "Ecs/Components.h"
 
@@ -20,24 +20,18 @@ extern void OnStart();
 extern void OnUpdate();
 extern void OnCleanUp();
 
-// Function that renders all entities having a Transform and a Mesh
 void RenderEntities(Registry& aRegistry, Camera& aCamera, Shader& aShader, Model& aDefaultModel);
 
 int main()
 {
     OnStart();
 
-    // 1. Initialize Window
+    // Initialize Window
     const UINT screenWidth = 1080;
     const UINT screenHeight = 720;
-
     Window window;
-    if (!window.StartUpWindow(screenWidth, screenHeight, L"DirectX 11 Engine"))
-    {
-        return -1;
-    }
+    if (!window.StartUpWindow(screenWidth, screenHeight, L"DirectX 11 Engine")) { return -1; }
 
-    // 2. Initialize Renderer
     Renderer renderer;
     if (!renderer.Initialize(window.GetHwnd(), screenWidth, screenHeight))
     {
@@ -45,7 +39,9 @@ int main()
         return -1;
     }
 
-    // 3. Pipeline States & Global Resources
+    CommonUtilities::Timer timer;
+    float deltaTime = 0;
+
     Shader shader(&renderer);
     RasterState rasterState(&renderer);
     Camera camera(screenWidth, screenHeight);
@@ -83,22 +79,25 @@ int main()
     //registry.AddComponent<MaterialComponent>(entity2, customTex, cubeModel.GetSamplerState());
 
 
-    // 6. RENDER LOOP
     bool isRunning = true;
     while (isRunning)
     {
         window.UpdateOpenWindow();
         OnUpdate();
 
-        // Rotate the entities to test unique transforms
-        t1.rotation.y += 0.005f;
-        t2.rotation.x += 0.01f;
-        t2.rotation.z += 0.005f;
+        if (window.GetInputHandeler()->IsKeyDown('W'))
+        {
+            t1.rotation.y += 0.5f * deltaTime;
+            t2.rotation.x += 1.f * deltaTime;
+            t2.rotation.z += 0.5f * deltaTime;
+        }
 
-        // Clear backbuffer & bind render target
+        
+
         renderer.BeginFrame(0.1f, 0.2f, 0.4f, 1.0f);
+        deltaTime = timer.GetDeltaTime();
 
-        // Bind common pipeline states
+        timer.Update();
         shader.Use();
         rasterState.Use();
 
@@ -107,10 +106,7 @@ int main()
 
         renderer.EndFrame();
 
-        if (window.GetInputHandeler()->IsKeyPressed('W'))
-        {
-            std::cout << "W PRESSED\n";
-        }
+        
     }
 
     renderer.CleanUp();
@@ -118,10 +114,7 @@ int main()
     return 0;
 }
 
-// --------------------------------------------------------------------------
-// ECS Render Function: iterates through entities and draws them with their 
-// specific Transform (World matrix) and Material.
-// --------------------------------------------------------------------------
+
 void RenderEntities(Registry& aRegistry, Camera& aCamera, Shader& aShader, Model& aDefaultModel)
 {
     // Compute View-Projection once for the whole frame
