@@ -1,0 +1,53 @@
+#pragma once
+
+#include "Core/Window.h"
+
+#include "../Renderer/Renderer.h"
+#include "../Renderer/Shader.h"
+#include "../Renderer/RasterState.h"
+#include "../Renderer/Model.h"
+#include "../Renderer/Camera.h"
+#include "../Renderer/TextureSampler.h"
+#include "../Input/InputSystem.h"
+#include "../External/Timer.h"
+
+#include "../Ecs/Registry.h"
+#include "../Ecs/Components.h"
+
+#include "Application.h"
+
+extern CrashOut::Application* CrashOut::CreateApplication();
+
+int main(int argc, char* argv[])
+{
+    // 1. Initialize Engine Subsystems (Window, Renderer, Input, etc.)
+    // CrashOut::Log::Init();
+
+    // 2. Create the client application (Sandbox/Game)
+    auto app = CrashOut::CreateApplication();
+
+    // 3. Start game logic
+    app->OnStart();
+
+    // 4. High-resolution timer setup for deltaTime
+    // (Using standard chrono or Win32 high-res counter)
+    float deltaTime = 0.016f; // Placeholder stub
+
+    bool isRunning = true;
+    while (isRunning)
+    {
+        // Poll window/OS messages & input
+        // Update engine systems (Input, Physics, etc.)
+
+        app->OnUpdate(deltaTime);
+        app->OnRender();
+
+        // Swap buffers / Present frame
+    }
+
+    // 5. Shutdown sequence
+    app->OnShutdown();
+    delete app;
+
+    return 0;
+}

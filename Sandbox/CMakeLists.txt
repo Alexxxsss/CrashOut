@@ -1,6 +1,6 @@
 add_executable(Sandbox 
-    Src/Application.cpp
-    Src/Application.h
+    Src/Game.cpp
+    Src/Game.h
 )
 
 target_link_libraries(Sandbox PRIVATE CrashOut)
