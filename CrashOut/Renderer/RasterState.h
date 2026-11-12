@@ -10,8 +10,10 @@ class RasterState
 	Renderer* myRenderer = nullptr;
 
 public:
-	RasterState(Renderer* renderer);
+	RasterState() = default;
 	virtual ~RasterState() = default;
+
+	void Init(Renderer* renderer);
 
 	// Bind the raster state to the pipeline
 	void Use();

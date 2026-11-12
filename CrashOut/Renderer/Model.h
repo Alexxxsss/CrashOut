@@ -44,7 +44,9 @@ struct Vertex
 class Model
 {
 public:
-    Model(Renderer* renderer);
+    Model() = default;
+	void Init(Renderer* renderer);
+
     virtual ~Model(); 
 
     void Create();

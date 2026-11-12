@@ -6,8 +6,10 @@ CommonUtilities::InputHandler *globalInputHandeler;
 
 LRESULT CALLBACK Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    globalInputHandeler->UpdateEvents(uMsg, wParam, lParam);
-
+    if (globalInputHandeler != nullptr)
+    {
+        globalInputHandeler->UpdateEvents(uMsg, wParam, lParam);
+    }
     switch (uMsg)
     {
     case WM_DESTROY:
@@ -60,7 +62,10 @@ bool Window::StartUpWindow(int width, int height, const wchar_t* title)
 
 bool Window::UpdateOpenWindow()
 {
-    globalInputHandeler->UpdateInput();
+    if (globalInputHandeler != nullptr)
+    {
+        globalInputHandeler->UpdateInput();
+    }
     MSG msg = {};
     while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
     {

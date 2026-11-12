@@ -14,8 +14,9 @@ struct ModelViewProjectionBuffer
 class Shader
 {
 public:
-	Shader(Renderer* renderer);
+	Shader() = default;
 	virtual ~Shader();
+	void Init(Renderer* renderer);
 
 	// Create vertex shader
 	void LoadVertexShader(const std::string& vertex_shader_path);

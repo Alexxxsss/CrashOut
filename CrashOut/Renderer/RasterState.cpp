@@ -2,14 +2,14 @@
 #include "Renderer.h"
 #include <d3d11.h>
 
-RasterState::RasterState(Renderer* renderer)
-    : myRenderer(renderer)
+
+void RasterState::Init(Renderer* renderer)
 {
+    myRenderer = renderer;
     // Initialize both rasterizer states upon creation
     CreateRasterStateSolid();
     CreateRasterStateWireframe();
 }
-
 void RasterState::ToggleWireframe()
 {
     myRenderWireframe = !myRenderWireframe;

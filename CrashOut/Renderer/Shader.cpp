@@ -7,9 +7,13 @@
 #include <DirectXMath.h>
 
 
-Shader::Shader(Renderer* renderer) : myRenderer(renderer) {}
 
 Shader::~Shader() = default;
+
+void Shader::Init(Renderer* renderer)
+{
+    myRenderer = renderer;
+}
 
 void Shader::LoadVertexShader(const std::string& vertex_shader_path)
 {

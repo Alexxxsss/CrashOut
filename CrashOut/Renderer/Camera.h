@@ -6,8 +6,10 @@
 class Camera
 {
 public:
-	Camera(int width, int height);
+	Camera() = default;
 	virtual ~Camera() = default;
+
+	void Init(int width, int height);
 
 	// Recalculates the view based on the pitch and yaw
 	void Rotate(float pitch, float yaw);

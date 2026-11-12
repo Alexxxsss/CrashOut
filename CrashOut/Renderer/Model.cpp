@@ -9,11 +9,13 @@
 
 
 
-Model::Model(Renderer* renderer) : myRenderer(renderer) {}
 
 Model::~Model() = default;
 
-
+void Model::Init(Renderer* renderer)
+{
+	myRenderer = renderer;
+}
 
 void Model::Create() 
 {
