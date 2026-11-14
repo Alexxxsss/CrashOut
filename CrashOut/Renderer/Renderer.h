@@ -30,11 +30,22 @@ public:
     ID3D11Device* GetDevice() const { return m_device.Get(); }
     ID3D11DeviceContext* GetContext() const { return m_deviceContext.Get(); }
 
+    void CreateDepthBuffer(UINT width, UINT height);
+    void CreateDepthStencilState();
+
 private:
     ComPtr<ID3D11Device> m_device;
     ComPtr<ID3D11DeviceContext> m_deviceContext;
     ComPtr<IDXGISwapChain> m_swapChain;
     ComPtr<ID3D11RenderTargetView> m_renderTargetView;
+
+
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_depthBuffer;
+
+    Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_depthStencilView;
+
+    Microsoft::WRL::ComPtr<ID3D11DepthStencilState> m_depthStencilState;
+
 
     D3D11_VIEWPORT m_viewport = {};
 };

@@ -1,5 +1,6 @@
 #include "Game.h" 
 #include "Core/EngineEntry.h" 
+#include "Core/Vector.h" 
 #include <iostream>
 #include <DirectXMath.h> 
 
@@ -11,7 +12,7 @@ class SandboxApp : public CrashOut::Application
     Model cubeModel;
     TransformComponent* t1 = nullptr;
     TransformComponent* t2 = nullptr;
-
+    TransformComponent* t3 = nullptr;
 public:
     SandboxApp() = default;
 
@@ -44,15 +45,22 @@ public:
         t2->position = { 1.5f, 0.5f, 5.0f };
         t2->scale = { 0.6f, 0.6f, 0.6f };
         registry.AddComponent<MeshComponent>(entity2, &cubeModel);
+
+        Entity floor = registry.CreateEntity();
+        t3 = &registry.AddComponent<TransformComponent>(floor);
+        t3->position = { 0.f, -2.f, 0.f };
+        t3->scale = { 100.f, 0.2f, 100.f };
+        registry.AddComponent<MeshComponent>(floor, &cubeModel);
+
     }
 
     void OnUpdate(float deltaTime) override
     {
         if (GetWindow().GetInputHandeler()->IsKeyDown('R'))
         {
-            t1->rotation.y += 0.5f * deltaTime;
-            t2->rotation.x += 1.f * deltaTime;
-            t2->rotation.z += 0.5f * deltaTime;
+            t1->rotation.y += 0.5f * deltaTime * 5;
+            t2->rotation.x += 1.f * deltaTime * 5;
+            t2->rotation.z += 0.5f * deltaTime * 5;
         }
 
     }

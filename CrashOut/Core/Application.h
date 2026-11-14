@@ -16,7 +16,7 @@ namespace CrashOut
         // Prevent copying/moving for engine stability
         Application(const Application&) = delete;
         Application& operator=(const Application&) = delete;
-        void WindowAndRenderLoop();
+        bool WindowAndRenderLoop();
         void CleanUp();
 
 

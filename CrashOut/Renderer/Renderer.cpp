@@ -67,9 +67,20 @@ bool Renderer::Initialize(HWND hwnd, UINT width, UINT height)
         return false;
     }
 
-    // 4. Bind the Render Target View
-    m_deviceContext->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), nullptr);
+    CreateDepthBuffer(width, height);
+    CreateDepthStencilState();
 
+    // 4. Bind the Render Target View
+    m_deviceContext->OMSetRenderTargets(
+        1,
+        m_renderTargetView.GetAddressOf(),
+        m_depthStencilView.Get()
+    );
+
+    m_deviceContext->OMSetDepthStencilState(
+        m_depthStencilState.Get(),
+        0
+    );
     // 5. Setup the Viewport
     m_viewport.TopLeftX = 0.0f;
     m_viewport.TopLeftY = 0.0f;
@@ -88,6 +99,19 @@ void Renderer::BeginFrame(float r, float g, float b, float a)
 {
     const float clearColor[4] = { r, g, b, a };
     m_deviceContext->ClearRenderTargetView(m_renderTargetView.Get(), clearColor);
+
+    if (m_depthStencilView)
+    {
+        m_deviceContext->ClearDepthStencilView(
+            m_depthStencilView.Get(),
+            D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
+            1.0f, // Clear depth to 1.0 (furthest away)
+            0     // Stencil clear value
+        );
+    }
+
+    // Re-bind both views
+    m_deviceContext->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), m_depthStencilView.Get());
 }
 
 void Renderer::EndFrame()
@@ -103,4 +127,67 @@ void Renderer::CleanUp()
     {
         m_deviceContext->ClearState();
     }
+}
+
+
+void Renderer::CreateDepthBuffer(UINT width, UINT height)
+{
+    D3D11_TEXTURE2D_DESC depthDesc = {};
+
+    depthDesc.Width = width;
+    depthDesc.Height = height;
+    depthDesc.MipLevels = 1;
+    depthDesc.ArraySize = 1;
+
+    depthDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+    depthDesc.SampleDesc.Count = 1;
+    depthDesc.SampleDesc.Quality = 0;
+
+    depthDesc.Usage = D3D11_USAGE_DEFAULT;
+
+    depthDesc.BindFlags =
+        D3D11_BIND_DEPTH_STENCIL;
+
+    HRESULT hr = m_device->CreateTexture2D(
+        &depthDesc,
+        nullptr,
+        &m_depthBuffer
+    );
+
+    if (FAILED(hr))
+        throw std::runtime_error("Failed to create depth buffer");
+
+    hr = m_device->CreateDepthStencilView(
+        m_depthBuffer.Get(),
+        nullptr,
+        &m_depthStencilView
+    );
+
+    if (FAILED(hr))
+        throw std::runtime_error("Failed to create depth stencil view");
+}
+
+
+
+void Renderer::CreateDepthStencilState()
+{
+    D3D11_DEPTH_STENCIL_DESC desc = {};
+
+    desc.DepthEnable = TRUE;
+
+    desc.DepthWriteMask =
+        D3D11_DEPTH_WRITE_MASK_ALL;
+
+    desc.DepthFunc = D3D11_COMPARISON_LESS;
+
+    desc.StencilEnable = FALSE;
+
+    HRESULT hr = m_device->CreateDepthStencilState(
+        &desc,
+        &m_depthStencilState
+    );
+
+    if (FAILED(hr))
+        throw std::runtime_error("Failed to create depth state");
 }

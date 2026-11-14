@@ -12,22 +12,33 @@ namespace CrashOut
     Application::Application()
     {
         
-        myWindow.StartUpWindow(myScreenWidth, myScreenHeight, L"DirectX 11 Engine");
+        if (!myWindow.StartUpWindow(myScreenWidth, myScreenHeight, L"DirectX 11 Engine"))
+        {
+            throw std::runtime_error("Window initialization failed");
+        }
         
-        myRenderer.Initialize(GetWindowHandle(), GetWindowWidth(), GetWindowHeight());
+        if (!myRenderer.Initialize(GetWindowHandle(), GetWindowWidth(), GetWindowHeight()))
+        {
+            throw std::runtime_error("Renderer initialization failed");
+        }
         myShader.Init(&myRenderer);
         myRasterState.Init(&myRenderer);
 
+        //myRenderer.CreateDepthBuffer(GetWindowWidth(), GetWindowHeight());
+        //myRenderer.CreateDepthStencilState();
 
         myShader.LoadPixelShader("../../CrashOut/Shaders/Pixel.hlsl");
         myShader.LoadVertexShader("../../CrashOut/Shaders/Vertex.hlsl");
         myShader.CreateWorldViewProjectionConstantBuffer();
     }
 
-    void Application::WindowAndRenderLoop()
+    bool Application::WindowAndRenderLoop()
     {
-        myWindow.UpdateOpenWindow();
-
+        if (!myWindow.UpdateOpenWindow())
+        {
+            return false;
+        }
+        
         myRenderer.BeginFrame(0.1f, 0.2f, 0.4f, 1.0f);
 
         myShader.Use();
