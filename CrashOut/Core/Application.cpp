@@ -47,7 +47,7 @@ namespace CrashOut
         OnRender();
 
         myRenderer.EndFrame();
-
+        return true;
     }
 
     void Application::CleanUp()
