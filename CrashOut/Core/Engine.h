@@ -12,3 +12,5 @@
 
 #include "../Ecs/Registry.h"
 #include "../Ecs/Components.h"
+
+#include <box3d/box3d.h>
