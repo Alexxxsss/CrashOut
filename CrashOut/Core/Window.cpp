@@ -1,15 +1,43 @@
 #include "Window.h"
 #include <iostream>
 #include <Input/InputSystem.h>
-
-CommonUtilities::InputHandler *globalInputHandeler;
+#include <memory>
 
 LRESULT CALLBACK Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    if (globalInputHandeler != nullptr)
+    Window* pWindow = nullptr;
+
+    if (uMsg == WM_NCCREATE)
     {
-        globalInputHandeler->UpdateEvents(uMsg, wParam, lParam);
+        CREATESTRUCTW* pCreate = reinterpret_cast<CREATESTRUCTW*>(lParam);
+        pWindow = reinterpret_cast<Window*>(pCreate->lpCreateParams);
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pWindow));
+
+        if (pWindow != nullptr)
+        {
+            pWindow->myHwnd = hwnd;
+        }
     }
+    else
+    {
+        pWindow = reinterpret_cast<Window*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+    }
+
+    if (pWindow != nullptr)
+    {
+        return pWindow->HandleMessage(hwnd, uMsg, wParam, lParam);
+    }
+
+    return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+}
+
+LRESULT Window::HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (myInputHandler != nullptr)
+    {
+        myInputHandler->UpdateEvents(uMsg, wParam, lParam);
+    }
+
     switch (uMsg)
     {
     case WM_DESTROY:
@@ -17,9 +45,10 @@ LRESULT CALLBACK Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
         PostQuitMessage(0);
         return 0;
     default:
-        return DefWindowProc(hwnd, uMsg, wParam, lParam);
+        return DefWindowProcW(hwnd, uMsg, wParam, lParam);
     }
 }
+
 
 bool Window::StartUpWindow(int width, int height, const wchar_t* title)
 {
@@ -45,7 +74,7 @@ bool Window::StartUpWindow(int width, int height, const wchar_t* title)
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT,
         wr.right - wr.left, wr.bottom - wr.top,
-        NULL, NULL, hInstance, NULL
+        NULL, NULL, hInstance, this 
     );
 
     if (myHwnd == NULL)
@@ -55,16 +84,17 @@ bool Window::StartUpWindow(int width, int height, const wchar_t* title)
     }
 
     ShowWindow(myHwnd, SW_SHOWDEFAULT);
-    globalInputHandeler = new CommonUtilities::InputHandler(myHwnd);
-    myInputHandeler = globalInputHandeler;
+
+
+    myInputHandler = std::make_unique<CommonUtilities::InputHandler>(myHwnd);
     return true;
 }
 
 bool Window::UpdateOpenWindow()
 {
-    if (globalInputHandeler != nullptr)
+    if (myInputHandler != nullptr)
     {
-        globalInputHandeler->UpdateInput();
+        myInputHandler->UpdateInput();
     }
     MSG msg = {};
     while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))

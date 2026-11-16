@@ -16,9 +16,14 @@ namespace CrashOut
         // Prevent copying/moving for engine stability
         Application(const Application&) = delete;
         Application& operator=(const Application&) = delete;
-        bool WindowAndRenderLoop(float aDeltaTime);
+
+        bool ProcessEvents();
+        void Update(float deltaTime);
+        void RenderFrame();
         void CleanUp();
 
+
+        void DestroyEntity(Entity entity);
 
         HWND GetWindowHandle() const { return myWindow.GetHwnd(); }
         UINT GetWindowWidth() const { return myScreenWidth; }

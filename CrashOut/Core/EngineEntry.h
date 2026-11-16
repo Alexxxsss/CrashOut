@@ -1,36 +1,44 @@
-#pragma once
-#include "Engine.h"
 
-extern CrashOut::Application* CrashOut::CreateApplication();
+#pragma once
+
+#include "Engine.h"
+#include <memory>
+#include <stdexcept>
 
 int main(int argc, char* argv[])
 {
     CommonUtilities::Timer timer;
-    auto app = CrashOut::CreateApplication();
+
+    std::unique_ptr<CrashOut::Application> app(
+        CrashOut::CreateApplication()
+    );
+
+    if (!app)
+        return -1;
 
     app->OnStart();
-    float deltaTime = 0.f; 
 
     bool isRunning = true;
+
     while (isRunning)
     {
-        deltaTime = timer.GetDeltaTime();
+        isRunning = app->ProcessEvents();
+
+        if (!isRunning)
+            break;
+
         timer.Update();
 
+        float deltaTime = timer.GetDeltaTime();
 
-        if (app->WindowAndRenderLoop(deltaTime))
-        {
-            app->OnUpdate(deltaTime);
+        app->Update(deltaTime);
 
-        }
-
+        app->RenderFrame();
     }
 
-    // 5. Shutdown sequence
+    // 5. Shutdown
     app->OnShutdown();
     app->CleanUp();
-
-    delete app;
 
     return 0;
 }

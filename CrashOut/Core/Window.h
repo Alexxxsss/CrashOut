@@ -1,5 +1,8 @@
 #pragma once
 #include <windows.h>
+#include <memory>
+#include <Input/InputSystem.h>
+
 namespace CommonUtilities {
     class InputHandler;
 }
@@ -19,12 +22,15 @@ public:
     int GetWidth() const { return myWidth; }
     int GetHeight() const { return myHeight; }
 
-    CommonUtilities::InputHandler* GetInputHandeler() { return myInputHandeler; }
-
+    CommonUtilities::InputHandler* GetInputHandler()
+    {
+        return myInputHandler.get();
+    }
 private:
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    CommonUtilities::InputHandler* myInputHandeler;
+    LRESULT HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+    std::unique_ptr<CommonUtilities::InputHandler> myInputHandler;
     HWND myHwnd = nullptr;
     int myWidth = 800;
     int myHeight = 600;

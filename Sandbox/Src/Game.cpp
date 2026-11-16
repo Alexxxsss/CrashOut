@@ -11,6 +11,7 @@ class SandboxApp : public CrashOut::Application
     Model cubeModel;
     Entity entity1;
     Entity entity2;
+    Entity floor;
     TransformComponent* t1 = nullptr;
     TransformComponent* t2 = nullptr;
     TransformComponent* t3 = nullptr;
@@ -45,6 +46,7 @@ public:
 
 
         // --- Entity 2 (Center-right Smaller Cube) ---
+
         entity2 = myRegistry.CreateEntity();
         t2 = &myRegistry.AddComponent<TransformComponent>(entity2);
         t2->position = { 1.5f, 0.5f, 5.0f };
@@ -53,7 +55,7 @@ public:
         myRegistry.AddComponent<BoxColliderComponent>(entity2);
 
 
-        Entity floor = myRegistry.CreateEntity();
+        floor = myRegistry.CreateEntity();
         t3 = &myRegistry.AddComponent<TransformComponent>(floor);
         t3->position = { 0.f, -2.f, 0.f };
         t3->scale = { 100.f, 0.2f, 100.f };
@@ -62,13 +64,27 @@ public:
         floorCollider.halfExtents = { 100.f, 0.2f, 100.f };
         floorCollider.isStatic = true;
 
+        for (int i = 0; i < 10; i++)
+        {
+            for (int y = 0; y < 10; y++)
+            {
+                Entity entity2 = myRegistry.CreateEntity();
+                t2 = &myRegistry.AddComponent<TransformComponent>(entity2);
+                t2->position = { 1.5f + i, 0.5f, 5.0f+ y };
+                t2->scale = { 0.6f, 0.6f, 0.6f };
+                myRegistry.AddComponent<MeshComponent>(entity2, &cubeModel);
+                myRegistry.AddComponent<BoxColliderComponent>(entity2);
+            }
+            
+        }
+        
 
     }
 
     void OnUpdate(float deltaTime) override
     {
         float speed = 1;
-        if (GetWindow().GetInputHandeler()->IsKeyDown('R'))
+        if (GetWindow().GetInputHandler()->IsKeyDown('R'))
         {
             auto* c1 = myRegistry.GetComponent<BoxColliderComponent>(entity1);
             auto* c2 = myRegistry.GetComponent<BoxColliderComponent>(entity2);
@@ -87,6 +103,11 @@ public:
             }
 
         }
+        if (GetWindow().GetInputHandler()->IsKeyDown('E'))
+        {
+            DestroyEntity(floor);
+        }
+
 
     }
 

@@ -33,6 +33,8 @@ void PhysicsSystem::CreateBoxCollider(TransformComponent& transform, BoxCollider
     bodyDef.rotation.s = transform.rotation.w;
 
     collider.bodyId = b3CreateBody(m_worldId, &bodyDef);
+    if (!b3Body_IsValid(collider.bodyId))
+        return;
 
     // 2. Create the box shape
     b3Vec3 offset = { collider.localOffset.x, collider.localOffset.y, collider.localOffset.z };

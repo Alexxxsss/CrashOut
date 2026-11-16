@@ -32,27 +32,50 @@ namespace CrashOut
         myShader.CreateWorldViewProjectionConstantBuffer();
     }
 
-    bool Application::WindowAndRenderLoop(float aDeltaTime)
+
+    bool Application::ProcessEvents()
     {
-        if (!myWindow.UpdateOpenWindow())
-        {
-            return false;
-        }
+        return myWindow.UpdateOpenWindow();
+    }
 
-        const float fixedTimeStep = 1.0f / 60.0f;
 
-        float clampedDelta = (aDeltaTime > 0.25f) ? 0.25f : aDeltaTime;
-        myPhysicsAccumulator += clampedDelta;
+    void Application::Update(float deltaTime)
+    {
+        // Prevent extremely large frame times
+        constexpr float maxDeltaTime = 0.25f;
 
+        deltaTime = (deltaTime > maxDeltaTime)
+            ? maxDeltaTime
+            : deltaTime;
+
+        // Update game logic first
+        OnUpdate(deltaTime);
+
+        // Fixed physics timestep
+        constexpr float fixedTimeStep = 1.0f / 60.0f;
+
+        myPhysicsAccumulator += deltaTime;
 
         while (myPhysicsAccumulator >= fixedTimeStep)
         {
-            myPhysics.UpdateTransforms(myRegistry, fixedTimeStep);
+            myPhysics.UpdateTransforms(
+                myRegistry,
+                fixedTimeStep
+            );
+
             myPhysicsAccumulator -= fixedTimeStep;
         }
+    }
 
-        
-        myRenderer.BeginFrame(0.1f, 0.2f, 0.4f, 1.0f);
+
+    void Application::RenderFrame()
+    {
+        myRenderer.BeginFrame(
+            0.1f,
+            0.2f,
+            0.4f,
+            1.0f
+        );
 
         myShader.Use();
         myRasterState.Use();
@@ -60,8 +83,8 @@ namespace CrashOut
         OnRender();
 
         myRenderer.EndFrame();
-        return true;
     }
+
 
     void Application::CleanUp()
     {
@@ -109,6 +132,20 @@ namespace CrashOut
 
             mesh->model->Render();
         }
+    }
+
+
+    void Application::DestroyEntity(Entity entity)
+    {
+        BoxColliderComponent* collider =
+            myRegistry.GetComponent<BoxColliderComponent>(entity);
+
+        if (collider)
+        {
+            myPhysics.DestroyBoxCollider(*collider);
+        }
+
+        myRegistry.DestroyEntity(entity);
     }
 
 }
