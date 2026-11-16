@@ -67,7 +67,7 @@ public:
 
     void OnUpdate(float deltaTime) override
     {
-        float speed = 1000;
+        float speed = 1;
         if (GetWindow().GetInputHandeler()->IsKeyDown('R'))
         {
             auto* c1 = myRegistry.GetComponent<BoxColliderComponent>(entity1);
@@ -76,14 +76,14 @@ public:
             if (c1 && b3Body_IsValid(c1->bodyId))
             {
                 b3Body_SetAwake(c1->bodyId, true);
-                b3Body_SetAngularVelocity(c1->bodyId, { 0.0f, 2.5f*deltaTime* speed, 0.0f });
-                b3Body_SetLinearVelocity(c1->bodyId, { 0.0f, 2.5f * deltaTime * speed, 0.0f });
+                b3Body_SetAngularVelocity(c1->bodyId, { 0.0f, 2.5f * speed, 0.0f });
+                b3Body_SetLinearVelocity(c1->bodyId, { 0.0f, 2.5f * speed, 0.0f });
 
             }
             if (c2 && b3Body_IsValid(c2->bodyId))
             {
                 b3Body_SetAwake(c2->bodyId, true);
-                b3Body_SetAngularVelocity(c2->bodyId, { 5.0f * deltaTime * speed, 0.0f, 2.5f * deltaTime * speed });
+                b3Body_SetAngularVelocity(c2->bodyId, { 5.0f * speed, 0.0f, 2.5f * speed });
             }
 
         }
