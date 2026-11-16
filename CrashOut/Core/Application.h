@@ -16,7 +16,7 @@ namespace CrashOut
         // Prevent copying/moving for engine stability
         Application(const Application&) = delete;
         Application& operator=(const Application&) = delete;
-        bool WindowAndRenderLoop();
+        bool WindowAndRenderLoop(float aDeltaTime);
         void CleanUp();
 
 
@@ -42,6 +42,10 @@ namespace CrashOut
         Renderer myRenderer;
         Shader myShader;
         RasterState myRasterState;
+        PhysicsSystem myPhysics;
+        Registry myRegistry;
+
+        float myPhysicsAccumulator = 0.0f;
     };
 
     // Forward declaration for client factory function

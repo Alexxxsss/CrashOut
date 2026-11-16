@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
         timer.Update();
 
 
-        if (app->WindowAndRenderLoop())
+        if (app->WindowAndRenderLoop(deltaTime))
         {
             app->OnUpdate(deltaTime);
 

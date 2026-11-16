@@ -32,12 +32,25 @@ namespace CrashOut
         myShader.CreateWorldViewProjectionConstantBuffer();
     }
 
-    bool Application::WindowAndRenderLoop()
+    bool Application::WindowAndRenderLoop(float aDeltaTime)
     {
         if (!myWindow.UpdateOpenWindow())
         {
             return false;
         }
+
+        const float fixedTimeStep = 1.0f / 60.0f;
+
+        float clampedDelta = (aDeltaTime > 0.25f) ? 0.25f : aDeltaTime;
+        myPhysicsAccumulator += clampedDelta;
+
+
+        while (myPhysicsAccumulator >= fixedTimeStep)
+        {
+            myPhysics.UpdateTransforms(myRegistry, fixedTimeStep);
+            myPhysicsAccumulator -= fixedTimeStep;
+        }
+
         
         myRenderer.BeginFrame(0.1f, 0.2f, 0.4f, 1.0f);
 
@@ -94,7 +107,6 @@ namespace CrashOut
                 mesh->model->UseTexture();
             }
 
-            // 4. Draw mesh indices
             mesh->model->Render();
         }
     }
