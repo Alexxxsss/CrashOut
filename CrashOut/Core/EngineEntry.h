@@ -2,48 +2,70 @@
 #pragma once
 
 #include "Engine.h"
+
 #include <memory>
-#include <stdexcept>
+#include <exception>
+#include <iostream>
+#include <cstdlib>
+#include <windows.h>
 
 int main(int argc, char* argv[])
 {
-    CommonUtilities::Timer timer;
-
-    std::unique_ptr<CrashOut::Application> app(
-        CrashOut::CreateApplication()
-    );
-
-    if (!app)
-        return -1;
-
-    app->OnStart();
-
-    bool isRunning = true;
-
-    while (isRunning)
+    try
     {
-        isRunning = app->ProcessEvents();
+        CommonUtilities::Timer timer;
 
-        if (app->GetWindow().IsMinimized()) ///
-        {                                   /// This is for optimization
-            Sleep(16);                      /// Makes the main loop slower fps to save cpu power when minimized
-        }                                   ///
+        std::unique_ptr<CrashOut::Application> app(
+            CrashOut::CreateApplication()
+        );
 
-        if (!isRunning)
-            break;
+        if (!app)
+            return EXIT_FAILURE;
 
-        timer.Update();
+        app->OnStart();
 
-        float deltaTime = timer.GetDeltaTime();
+        bool isRunning = true;
 
-        app->Update(deltaTime);
+        while (isRunning)
+        {
+            isRunning = app->ProcessEvents();
 
-        app->RenderFrame();
+            if (!isRunning)
+                break;
+
+            timer.Update();
+
+            float deltaTime = timer.GetDeltaTime();
+
+            if (app->GetWindow().IsMinimized()) ///
+            {                                   /// This is for optimization
+                Sleep(16);                      /// Makes the main loop slower fps to save cpu power when minimized
+            }                                   ///
+
+            app->Update(deltaTime);
+            app->RenderFrame();
+        }
+
+        app->OnShutdown();
+        app->CleanUp();
+
+        return EXIT_SUCCESS;
     }
+    catch (const std::exception& exception)
+    {
+        std::cerr
+            << "\n[CrashOut Fatal Error]\n"
+            << exception.what()
+            << std::endl;
 
-    // 5. Shutdown
-    app->OnShutdown();
-    app->CleanUp();
+        MessageBoxW(
+            nullptr,
+            L"A fatal error occurred. "
+            L"See the console for details.",
+            L"CrashOut Engine Error",
+            MB_OK | MB_ICONERROR
+        );
 
-    return 0;
+        return EXIT_FAILURE;
+    }
 }

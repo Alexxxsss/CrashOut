@@ -27,8 +27,14 @@ namespace CrashOut
         //myRenderer.CreateDepthBuffer(GetWindowWidth(), GetWindowHeight());
         //myRenderer.CreateDepthStencilState();
 
-        myShader.LoadPixelShader("../../CrashOut/Shaders/Pixel.hlsl");
-        myShader.LoadVertexShader("../../CrashOut/Shaders/Vertex.hlsl");
+        myShader.LoadVertexShader(
+            L"../../CrashOut/Shaders/Vertex.hlsl"
+        );
+
+        myShader.LoadPixelShader(
+            L"../../CrashOut/Shaders/Pixel.hlsl"
+        );
+
         myShader.CreateWorldViewProjectionConstantBuffer();
     }
 

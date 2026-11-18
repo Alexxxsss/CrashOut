@@ -4,7 +4,7 @@
 #include <wrl/client.h> // For Microsoft::WRL::ComPtr
 #include <d3dcompiler.h>
 #include <iostream>
-
+#include "DXError.h"
 
 // Link required DirectX libraries (or link them in your CMakeLists.txt)
 #pragma comment(lib, "d3d11.lib")
@@ -57,13 +57,3 @@ private:
     D3D11_VIEWPORT m_viewport = {};
 };
 
-namespace DX
-{
-    inline void Check(HRESULT hr)
-    {
-        if (FAILED(hr))
-        {
-            throw std::runtime_error("DirectX-anrop misslyckades!");
-        }
-    }
-}
