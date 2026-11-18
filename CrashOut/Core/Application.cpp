@@ -11,7 +11,6 @@ namespace CrashOut
 
     Application::Application()
     {
-        
         if (!myWindow.StartUpWindow(myScreenWidth, myScreenHeight, L"DirectX 11 Engine"))
         {
             throw std::runtime_error("Window initialization failed");
@@ -36,6 +35,27 @@ namespace CrashOut
         );
 
         myShader.CreateWorldViewProjectionConstantBuffer();
+
+
+        myRegistry.SetOnRemove<BoxColliderComponent>(
+            [this](Entity entity, BoxColliderComponent& collider)
+            {
+                myPhysics.DestroyBoxCollider(collider);
+            }
+        );
+
+        myRegistry.SetOnRemove<TransformComponent>(
+            [this](Entity entity, TransformComponent& transform)
+            {
+                auto* collider =
+                    myRegistry.GetComponent<BoxColliderComponent>(entity);
+
+                if (collider)
+                {
+                    myPhysics.DestroyBoxCollider(*collider);
+                }
+            }
+        );
     }
 
 
@@ -64,27 +84,28 @@ namespace CrashOut
 
     void Application::Update(float deltaTime)
     {
-        // Prevent extremely large frame times
         constexpr float maxDeltaTime = 0.25f;
 
         deltaTime = (deltaTime > maxDeltaTime)
             ? maxDeltaTime
             : deltaTime;
 
-        // Update game logic first
         OnUpdate(deltaTime);
 
-        // Fixed physics timestep
         constexpr float fixedTimeStep = 1.0f / 60.0f;
 
         myPhysicsAccumulator += deltaTime;
 
         while (myPhysicsAccumulator >= fixedTimeStep)
         {
-            myPhysics.UpdateTransforms(
-                myRegistry,
-                fixedTimeStep
-            );
+            myPhysics.UpdateTransforms(myRegistry, fixedTimeStep);
+
+            auto events = myPhysics.GetCollisionEvents();
+
+            for (const auto& event : events)
+            {
+                OnCollision(event);
+            }
 
             myPhysicsAccumulator -= fixedTimeStep;
         }
@@ -116,32 +137,14 @@ namespace CrashOut
     }
 
 
-
     void Application::CleanUp()
     {
         myRenderer.CleanUp();
     }
 
-
-
-
-
-    
-
-
-
     void Application::DestroyEntity(Entity entity)
     {
-        BoxColliderComponent* collider =
-            myRegistry.GetComponent<BoxColliderComponent>(entity);
-
-        if (collider)
-        {
-            myPhysics.DestroyBoxCollider(*collider);
-        }
-
         myRegistry.DestroyEntity(entity);
     }
-
 }
 

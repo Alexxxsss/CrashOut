@@ -40,6 +40,7 @@ namespace CrashOut
         virtual void OnUpdate(float deltaTime) = 0;
         virtual void OnRender() = 0;
         virtual void OnShutdown() = 0;
+        virtual void OnCollision(const CollisionEvent& event) {}
 
         virtual void OnResize(UINT width, UINT height) {}
     protected:

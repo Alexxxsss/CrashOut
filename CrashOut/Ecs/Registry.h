@@ -8,6 +8,7 @@
 #include <unordered_set>
 #include <stdexcept>
 #include <utility>
+#include <functional>
 
 using Entity = uint32_t;
 
@@ -26,15 +27,32 @@ class ComponentPool : public IComponentPool
 public:
     std::unordered_map<Entity, T> data;
 
+    std::function<void(Entity, T&)> onRemove;
+
     void RemoveEntity(Entity entity) override
     {
-        data.erase(entity);
+        auto it = data.find(entity);
+
+        if (it == data.end())
+            return;
+
+        if (onRemove)
+        {
+            onRemove(entity, it->second);
+        }
+
+        data.erase(it);
     }
 };
 
 class Registry
 {
 public:
+    Registry() = default;
+
+    Registry(const Registry&) = delete;
+    Registry& operator=(const Registry&) = delete;
+
     Entity CreateEntity()
     {
         Entity entity = m_NextEntityId++;
@@ -123,7 +141,12 @@ public:
         if (!pool)
             return false;
 
-        return pool->data.erase(entity) > 0;
+        if (pool->data.find(entity) == pool->data.end())
+            return false;
+
+        pool->RemoveEntity(entity);
+
+        return true;
     }
 
     template<typename T>
@@ -135,6 +158,14 @@ public:
             return nullptr;
 
         return static_cast<ComponentPool<T>*>(it->second.get());
+    }
+
+    template<typename T>
+    void SetOnRemove(std::function<void(Entity, T&)> callback)
+    {
+        auto* pool = GetOrCreatePool<T>();
+
+        pool->onRemove = std::move(callback);
     }
 
 private:

@@ -4,6 +4,8 @@
 #include <iostream>
 #include <DirectXMath.h>
 #include <memory>
+#include <cmath>
+#include <stdexcept>
 
 class SandboxApp : public CrashOut::Application
 {
@@ -78,7 +80,7 @@ public:
         myRegistry.AddComponent<MeshComponent>(floor, cubeModel);
         myRegistry.AddComponent<MaterialComponent>(floor, defaultMaterial);
         auto& floorCollider = myRegistry.AddComponent<BoxColliderComponent>(floor);
-        floorCollider.halfExtents = { 100.f, 0.2f, 100.f };
+        floorCollider.halfExtents = { 0.5f, 0.5f, 0.5f };
         floorCollider.isStatic = true;
 
         for (int i = 0; i < 10; i++)
@@ -129,7 +131,28 @@ public:
         {
             DestroyEntity(floor);
         }
+        if (GetWindow().GetInputHandler()->IsKeyPressed('T'))
+        {
+            auto* transform =
+                myRegistry.GetComponent<TransformComponent>(floor);
 
+            if (transform)
+            {
+                transform->position.y -= 1.0f;
+            }
+        }
+        
+
+        if (GetWindow().GetInputHandler()->IsKeyDown('Y'))
+        {
+            auto* transform =
+                myRegistry.GetComponent<TransformComponent>(floor);
+
+            if (transform)
+            {
+                transform->position.z -= 5.0f*deltaTime;
+            }
+        }
 
     }
 
@@ -151,6 +174,39 @@ public:
 
     }
 
+
+    void OnCollision(const CollisionEvent& event) override
+    {
+        switch (event.type)
+        {
+            case CollisionEventType::Begin:
+            {
+                if (event.entityA == entity1 || event.entityB == entity1)
+                {
+                    std::cout << "Player Enter Collider!\n";
+                }
+                break;
+            }
+            case CollisionEventType::End:
+            {
+                if (event.entityA == entity1 || event.entityB == entity1)
+                {
+                    std::cout << "Player Exit Collider!\n";
+                }
+                break;
+            }
+            case CollisionEventType::TriggerEnter:
+            {
+                break;
+            }
+            case CollisionEventType::TriggerExit:
+            {
+                break;
+            }
+        }
+    }
+
+
     void OnResize(UINT width, UINT height) override
     {
         camera.UpdateAspectRatio(width, height);
@@ -162,6 +218,7 @@ public:
         std::cout << "Sandbox OnShutdown called!\n";
     }
 };
+
 
 // Define the factory function required by EntryPoint.h
 CrashOut::Application* CrashOut::CreateApplication()
