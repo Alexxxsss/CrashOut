@@ -6,11 +6,14 @@
 #include <memory>
 #include <cmath>
 #include <stdexcept>
+#include "Renderer/DebugDraw/GizmoSystem.h"
 
 class SandboxApp : public CrashOut::Application
 {
     Camera camera;
+    GizmoSystem myGizmoSystem;
     std::shared_ptr<Model> cubeModel;
+    std::shared_ptr<Model> monkeyModel;
 
     std::shared_ptr<Material> defaultMaterial;
     std::shared_ptr<Material> brickMaterial;
@@ -35,9 +38,15 @@ public:
 
         camera.Init(GetWindowWidth(), GetWindowHeight());
 
+        myGizmoSystem.Init(&GetRenderer());
+
         cubeModel = std::make_shared<Model>();
         cubeModel->Init(&GetRenderer());
-        cubeModel->Create();
+        cubeModel->Create("Cube.obj");
+
+        monkeyModel = std::make_shared<Model>();
+        monkeyModel->Init(&GetRenderer());
+        monkeyModel->Create("Basic.obj");
 
         defaultMaterial = std::make_shared<Material>();
         defaultMaterial->Init(&GetRenderer());
@@ -55,10 +64,10 @@ public:
         t1 = &myRegistry.AddComponent<TransformComponent>(entity1);
         t1->position = { -1.5f, 0.0f, 4.0f };
         t1->scale = { 1.0f, 1.0f, 1.0f };
-        myRegistry.AddComponent<MeshComponent>(entity1, cubeModel);
+        myRegistry.AddComponent<MeshComponent>(entity1, monkeyModel);
         myRegistry.AddComponent<MaterialComponent>(entity1, brickMaterial);
-        myRegistry.AddComponent<BoxColliderComponent>(entity1);
-
+        auto& entity1Collider = myRegistry.AddComponent<BoxColliderComponent>(entity1);
+        entity1Collider.halfExtents = { 1.f, 1.f, 1.f };
 
 
         // --- Entity 2 (Center-right Smaller Cube) ---
@@ -69,33 +78,35 @@ public:
         t2->scale = { 0.6f, 0.6f, 0.6f };
         myRegistry.AddComponent<MeshComponent>(entity2, cubeModel);
         myRegistry.AddComponent<MaterialComponent>(entity2, brickMaterial);
+        auto& entity2Collider = myRegistry.AddComponent<BoxColliderComponent>(entity2);
+        entity2Collider.halfExtents = { 1.f, 1.f, 1.f };
 
-        myRegistry.AddComponent<BoxColliderComponent>(entity2);
 
 
         floor = myRegistry.CreateEntity();
         t3 = &myRegistry.AddComponent<TransformComponent>(floor);
         t3->position = { 0.f, -2.f, 0.f };
-        t3->scale = { 100.f, 0.2f, 100.f };
+        t3->scale = { 50.f, 0.1f, 50.f };
         myRegistry.AddComponent<MeshComponent>(floor, cubeModel);
         myRegistry.AddComponent<MaterialComponent>(floor, defaultMaterial);
         auto& floorCollider = myRegistry.AddComponent<BoxColliderComponent>(floor);
-        floorCollider.halfExtents = { 0.5f, 0.5f, 0.5f };
+        floorCollider.halfExtents = { 1.f, 1.f, 1.1f };
         floorCollider.isStatic = true;
 
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 20; i+=2)
         {
-            for (int y = 0; y < 10; y++)
+            for (int y = 0; y < 20; y+=2)
             {
-                Entity entity2 = myRegistry.CreateEntity();
-                t2 = &myRegistry.AddComponent<TransformComponent>(entity2);
-                t2->position = { 1.5f + i, 0.5f, 5.0f+ y };
+                Entity entity3 = myRegistry.CreateEntity();
+                t2 = &myRegistry.AddComponent<TransformComponent>(entity3);
+                t2->position = { 4.f + i, 0.5f, 5.0f+ y };
                 t2->scale = { 0.6f, 0.6f, 0.6f };
-                myRegistry.AddComponent<MeshComponent>(entity2, cubeModel);
-                myRegistry.AddComponent<MaterialComponent>(entity2, brickMaterial);
-                myRegistry.AddComponent<BoxColliderComponent>(entity2);
+                myRegistry.AddComponent<MeshComponent>(entity3, cubeModel);
+                myRegistry.AddComponent<MaterialComponent>(entity3, brickMaterial);
+                auto& entity3Collider = myRegistry.AddComponent<BoxColliderComponent>(entity3);
+                entity3Collider.halfExtents = { 1.f, 1.f, 1.1f };
+
             }
-            
         }
 
         std::cout << "Model references: "
@@ -108,9 +119,10 @@ public:
     void OnUpdate(float deltaTime) override
     {
         float speed = 1;
+        auto* c1 = myRegistry.GetComponent<BoxColliderComponent>(entity1);
+
         if (GetWindow().GetInputHandler()->IsKeyDown('R'))
         {
-            auto* c1 = myRegistry.GetComponent<BoxColliderComponent>(entity1);
             auto* c2 = myRegistry.GetComponent<BoxColliderComponent>(entity2);
 
             if (c1 && b3Body_IsValid(c1->bodyId))
@@ -127,6 +139,29 @@ public:
             }
 
         }
+
+        if (GetWindow().GetInputHandler()->IsKeyDown('W'))
+        {
+            b3Body_SetAwake(c1->bodyId, true);
+            b3Body_SetLinearVelocity(c1->bodyId, { 0.0f, 0.f, 3.0f * speed });
+        }
+        if (GetWindow().GetInputHandler()->IsKeyDown('A'))
+        {
+            b3Body_SetAwake(c1->bodyId, true);
+            b3Body_SetLinearVelocity(c1->bodyId, { -3.0f * speed, 0.f, 0.f });
+        }
+        if (GetWindow().GetInputHandler()->IsKeyDown('S'))
+        {
+            b3Body_SetAwake(c1->bodyId, true);
+            b3Body_SetLinearVelocity(c1->bodyId, { 0.0f, 0.f, -3.0f * speed });
+        }
+        if (GetWindow().GetInputHandler()->IsKeyDown('D'))
+        {
+            b3Body_SetLinearVelocity(c1->bodyId, { 3.0f * speed, 0.f, 0.f });
+
+        }
+
+
         if (GetWindow().GetInputHandler()->IsKeyDown('E'))
         {
             DestroyEntity(floor);
@@ -170,8 +205,10 @@ public:
             GetShader(),
             *defaultMaterial
         );
-
-
+        myGizmoSystem.RenderColliders(
+            myRegistry,
+            camera
+        );
     }
 
 

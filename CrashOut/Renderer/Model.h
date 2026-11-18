@@ -2,7 +2,8 @@
 
 #include <cstdint>
 #include <wrl/client.h>
-
+#include <string>
+#include <vector>
 class Renderer;
 struct ID3D11Buffer;
 struct ID3D11ShaderResourceView;
@@ -44,24 +45,26 @@ struct Vertex
 class Model
 {
 public:
-    Model() = default;
+	Model() = default;
+	virtual ~Model();
+
 	void Init(Renderer* renderer);
 
-    virtual ~Model(); 
-
-    void Create();
-    void CreateIndexBuffer();
-
-    void Render();
+	void Create(const std::string& path);
+	void Render();
 
 	Model(const Model&) = delete;
 	Model& operator=(const Model&) = delete;
 
 private:
-    Microsoft::WRL::ComPtr<ID3D11Buffer> myIndexBuffer = nullptr;
-    int myIndexCount = 0;
+	void CreateVertexBuffer(const std::vector<Vertex>& vertices);
+	void CreateIndexBuffer(const std::vector<uint32_t>& indices);
 
-    uint32_t myVertexCount = 0;
-    Microsoft::WRL::ComPtr<ID3D11Buffer> myVertexBuffer;
-    Renderer* myRenderer = nullptr; 
+	Microsoft::WRL::ComPtr<ID3D11Buffer> myIndexBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> myVertexBuffer;
+
+	uint32_t myIndexCount = 0;
+	uint32_t myVertexCount = 0;
+
+	Renderer* myRenderer = nullptr;
 };

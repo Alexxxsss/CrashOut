@@ -1,131 +1,219 @@
+
 #include "Model.h"
 #include "Renderer.h"
+
 #include <iostream>
 #include <vector>
+#include <map>
+#include <filesystem>
+#include <stdexcept>
 
+#define TINYOBJLOADER_IMPLEMENTATION
+#include "../External/tiny_obj_loader.h"
 
 Model::~Model() = default;
 
 void Model::Init(Renderer* renderer)
 {
-	myRenderer = renderer;
+    myRenderer = renderer;
 }
 
-void Model::Create() 
+void Model::Create(const std::string& path)
 {
-	ID3D11Device* device = myRenderer->GetDevice();
+    tinyobj::attrib_t attrib;
+    std::vector<tinyobj::shape_t> shapes;
+    std::vector<tinyobj::material_t> materials;
 
-	// Vertex data
-	std::vector<Vertex> vertices =
-	{
-		// Front Face (Z = +0.5)
-		{ VertexPosition(-0.5f, +0.5f, +0.5f), VertexTextureUV(0.0f, 0.0f) }, // Top left
-		{ VertexPosition(+0.5f, +0.5f, +0.5f), VertexTextureUV(1.0f, 0.0f) }, // Top right
-		{ VertexPosition(+0.5f, -0.5f, +0.5f), VertexTextureUV(1.0f, 1.0f) }, // Bottom right
-		{ VertexPosition(-0.5f, -0.5f, +0.5f), VertexTextureUV(0.0f, 1.0f) }, // Bottom left
+    std::string error;
 
-		// Back Face (Z = -0.5)
-		{ VertexPosition(+0.5f, +0.5f, -0.5f), VertexTextureUV(0.0f, 1.0f) }, // Top left (from back view)
-		{ VertexPosition(-0.5f, +0.5f, -0.5f), VertexTextureUV(1.0f, 1.0f) }, // Top right
-		{ VertexPosition(-0.5f, -0.5f, -0.5f), VertexTextureUV(1.0f, 0.0f) }, // Bottom right
-		{ VertexPosition(+0.5f, -0.5f, -0.5f), VertexTextureUV(0.0f, 0.0f) }, // Bottom left
+    std::string baseDir =
+        std::filesystem::path(path).parent_path().string();
 
-		// Left Face (X = -0.5)
-		{ VertexPosition(-0.5f, +0.5f, -0.5f), VertexTextureUV(0.0f, 1.0f) }, // Top left
-		{ VertexPosition(-0.5f, +0.5f, +0.5f), VertexTextureUV(1.0f, 1.0f) }, // Top right
-		{ VertexPosition(-0.5f, -0.5f, +0.5f), VertexTextureUV(1.0f, 0.0f) }, // Bottom right
-		{ VertexPosition(-0.5f, -0.5f, -0.5f), VertexTextureUV(0.0f, 0.0f) }, // Bottom left
+    if (!baseDir.empty())
+        baseDir += "/";
 
-		// Right Face (X = +0.5)
-		{ VertexPosition(+0.5f, +0.5f, +0.5f), VertexTextureUV(0.0f, 1.0f) }, // Top left
-		{ VertexPosition(+0.5f, +0.5f, -0.5f), VertexTextureUV(1.0f, 1.0f) }, // Top right
-		{ VertexPosition(+0.5f, -0.5f, -0.5f), VertexTextureUV(1.0f, 0.0f) }, // Bottom right
-		{ VertexPosition(+0.5f, -0.5f, +0.5f), VertexTextureUV(0.0f, 0.0f) }, // Bottom left
+    bool success = tinyobj::LoadObj(
+        &attrib,
+        &shapes,
+        &materials,
+        &error,
+        path.c_str(),
+        baseDir.c_str(),
+        true
+    );
 
-		// Top Face (Y = +0.5)
-		{ VertexPosition(-0.5f, +0.5f, -0.5f), VertexTextureUV(0.0f, 1.0f) }, // Top left
-		{ VertexPosition(+0.5f, +0.5f, -0.5f), VertexTextureUV(1.0f, 1.0f) }, // Top right
-		{ VertexPosition(+0.5f, +0.5f, +0.5f), VertexTextureUV(1.0f, 0.0f) }, // Bottom right
-		{ VertexPosition(-0.5f, +0.5f, +0.5f), VertexTextureUV(0.0f, 0.0f) }, // Bottom left
+    if (!success)
+    {
+        throw std::runtime_error(
+            "Failed to load model: " + path + "\n" + error
+        );
+    }
 
-		// Bottom Face (Y = -0.5)
-		{ VertexPosition(-0.5f, -0.5f, +0.5f), VertexTextureUV(0.0f, 1.0f) }, // Top left
-		{ VertexPosition(+0.5f, -0.5f, +0.5f), VertexTextureUV(1.0f, 1.0f) }, // Top right
-		{ VertexPosition(+0.5f, -0.5f, -0.5f), VertexTextureUV(1.0f, 0.0f) }, // Bottom right
-		{ VertexPosition(-0.5f, -0.5f, -0.5f), VertexTextureUV(0.0f, 0.0f) }  // Bottom left
-	};
+    if (!error.empty())
+        std::cerr << error << std::endl;
 
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
 
+    // Maps OBJ position and UV indices to our vertex index.
+    std::map<std::pair<int, int>, uint32_t> uniqueVertices;
 
-	myVertexCount = static_cast<UINT>(vertices.size());
+    for (const auto& shape : shapes)
+    {
+        for (const auto& index : shape.mesh.indices)
+        {
+            auto key = std::make_pair(
+                index.vertex_index,
+                index.texcoord_index
+            );
 
-	// Create vertex buffer
-	D3D11_BUFFER_DESC vertexbuffer_desc = {};
-	vertexbuffer_desc.Usage = D3D11_USAGE_DEFAULT;
-	vertexbuffer_desc.ByteWidth = static_cast<UINT>(sizeof(Vertex) * vertices.size());
-	vertexbuffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+            auto it = uniqueVertices.find(key);
 
-	D3D11_SUBRESOURCE_DATA vertex_subdata = {};
-	vertex_subdata.pSysMem = vertices.data();
+            if (it != uniqueVertices.end())
+            {
+                indices.push_back(it->second);
+                continue;
+            }
 
-	DX::Check(device->CreateBuffer(&vertexbuffer_desc, &vertex_subdata, myVertexBuffer.ReleaseAndGetAddressOf()));
-	CreateIndexBuffer();
+            if (index.vertex_index < 0 ||
+                static_cast<size_t>(index.vertex_index) >=
+                attrib.vertices.size() / 3)
+            {
+                throw std::runtime_error(
+                    "Invalid vertex index: " + path
+                );
+            }
+
+            size_t positionIndex =
+                3 * static_cast<size_t>(index.vertex_index);
+
+            float x = attrib.vertices[positionIndex + 0];
+            float y = attrib.vertices[positionIndex + 1];
+            float z = attrib.vertices[positionIndex + 2];
+
+            float u = 0.0f;
+            float v = 0.0f;
+
+            if (index.texcoord_index >= 0)
+            {
+                if (static_cast<size_t>(index.texcoord_index) >=
+                    attrib.texcoords.size() / 2)
+                {
+                    throw std::runtime_error(
+                        "Invalid UV index: " + path
+                    );
+                }
+
+                size_t uvIndex =
+                    2 * static_cast<size_t>(index.texcoord_index);
+
+                u = attrib.texcoords[uvIndex + 0];
+                v = 1.0f - attrib.texcoords[uvIndex + 1];
+            }
+
+            Vertex vertex =
+            {
+                VertexPosition(x, y, -z),
+                VertexTextureUV(u, v)
+            };
+
+            uint32_t newIndex =
+                static_cast<uint32_t>(vertices.size());
+
+            uniqueVertices.emplace(key, newIndex);
+
+            vertices.push_back(vertex);
+            indices.push_back(newIndex);
+        }
+    }
+
+    if (vertices.empty() || indices.empty())
+    {
+        throw std::runtime_error("Empty model: " + path);
+    }
+
+    CreateVertexBuffer(vertices);
+    CreateIndexBuffer(indices);
+
+    std::cout << "Loaded model: " << path << "\n"
+        << "Vertices: " << myVertexCount << "\n"
+        << "Indices: " << myIndexCount << "\n"
+        << "Triangles: " << myIndexCount / 3
+        << std::endl;
 }
 
-void Model::CreateIndexBuffer()
+void Model::CreateVertexBuffer(
+    const std::vector<Vertex>& vertices)
 {
-	ID3D11Device* device = myRenderer->GetDevice();
+    ID3D11Device* device = myRenderer->GetDevice();
 
-	// Set Indices
-	std::vector<unsigned int> indices =
-	{
-		// Front Face
-		0, 1, 2,  2, 3, 0,
-		// Back Face
-		4, 5, 6,  6, 7, 4,
-		// Left Face
-		8, 9, 10, 10, 11, 8,
-		// Right Face
-		12, 13, 14, 14, 15, 12,
-		// Top Face
-		16, 17, 18, 18, 19, 16,
-		// Bottom Face
-		20, 21, 22, 22, 23, 20
-	};
+    myVertexCount = static_cast<uint32_t>(vertices.size());
 
-	myIndexCount = static_cast<UINT>(indices.size());
+    D3D11_BUFFER_DESC desc = {};
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.ByteWidth = static_cast<UINT>(
+        sizeof(Vertex) * vertices.size()
+        );
+    desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 
-	// Create index buffer
-	D3D11_BUFFER_DESC index_buffer_desc = {};
-	index_buffer_desc.Usage = D3D11_USAGE_DEFAULT;
-	index_buffer_desc.ByteWidth = static_cast<UINT>(sizeof(UINT) * indices.size());
-	index_buffer_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+    D3D11_SUBRESOURCE_DATA data = {};
+    data.pSysMem = vertices.data();
 
-	D3D11_SUBRESOURCE_DATA index_subdata = {};
-	index_subdata.pSysMem = indices.data();
-
-	DX::Check(device->CreateBuffer(&index_buffer_desc, &index_subdata, myIndexBuffer.ReleaseAndGetAddressOf()));
+    DX::Check(device->CreateBuffer(
+        &desc,
+        &data,
+        myVertexBuffer.ReleaseAndGetAddressOf()
+    ));
 }
 
+void Model::CreateIndexBuffer(
+    const std::vector<uint32_t>& indices)
+{
+    ID3D11Device* device = myRenderer->GetDevice();
+
+    myIndexCount = static_cast<uint32_t>(indices.size());
+
+    D3D11_BUFFER_DESC desc = {};
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.ByteWidth = static_cast<UINT>(
+        sizeof(uint32_t) * indices.size()
+        );
+    desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+
+    D3D11_SUBRESOURCE_DATA data = {};
+    data.pSysMem = indices.data();
+
+    DX::Check(device->CreateBuffer(
+        &desc,
+        &data,
+        myIndexBuffer.ReleaseAndGetAddressOf()
+    ));
+}
 
 void Model::Render()
 {
-	ID3D11DeviceContext* context = myRenderer->GetContext();
+    if (!myVertexBuffer || !myIndexBuffer)
+        return;
 
-	// We need to define the stride and offset
-	UINT stride = sizeof(Vertex);
-	UINT offset = 0;
+    ID3D11DeviceContext* context = myRenderer->GetContext();
 
-	// Bind the vertex buffer to the pipeline's Input Assembler stage
-	context->IASetVertexBuffers(0, 1, myVertexBuffer.GetAddressOf(), &stride, &offset);
+    UINT stride = sizeof(Vertex);
+    UINT offset = 0;
 
-	// Bind the index buffer to the pipeline's Input Assembler stage
-	context->IASetIndexBuffer(myIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+    context->IASetVertexBuffers(
+        0, 1, myVertexBuffer.GetAddressOf(),
+        &stride, &offset
+    );
 
-	// Bind the geometry topology to the pipeline's Input Assembler stage
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    context->IASetIndexBuffer(
+        myIndexBuffer.Get(),
+        DXGI_FORMAT_R32_UINT,
+        0
+    );
 
-	// Render geometry
-	context->DrawIndexed(myIndexCount, 0, 0);
+    context->IASetPrimitiveTopology(
+        D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST
+    );
+
+    context->DrawIndexed(myIndexCount, 0, 0);
 }
-
