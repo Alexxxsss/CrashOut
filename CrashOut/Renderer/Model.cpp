@@ -2,12 +2,6 @@
 #include "Renderer.h"
 #include <iostream>
 #include <vector>
-#include <filesystem>
-#include "../External/WICTextureLoader11.h"
-
-
-
-
 
 
 Model::~Model() = default;
@@ -135,46 +129,3 @@ void Model::Render()
 	context->DrawIndexed(myIndexCount, 0, 0);
 }
 
-
-void Model::LoadTexture()
-{
-	
-	std::wstring path = L"PrototypeTexture.png";
-
-	// Check if file exists
-	if (!std::filesystem::exists(path))
-	{
-		std::wstring error = L"Could not load file: " + path;
-		MessageBoxW(NULL, error.c_str(), L"Error", MB_OK);
-		return;
-	}
-
-	// Load texture into a resource shader view
-	ID3D11Device* device = myRenderer->GetDevice();
-	ID3D11DeviceContext* context = myRenderer->GetContext();
-
-	ComPtr<ID3D11Resource> resource = nullptr;
-	DX::Check(DirectX::CreateWICTextureFromFile(device, context, path.c_str(), resource.ReleaseAndGetAddressOf(), m_DiffuseTexture.ReleaseAndGetAddressOf()));
-
-	D3D11_SAMPLER_DESC desc = {};
-	desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-	desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-	desc.MinLOD = 0;
-	desc.MaxLOD = D3D11_FLOAT32_MAX;
-
-	DX::Check(device->CreateSamplerState(&desc, mySamplerState.ReleaseAndGetAddressOf()));
-
-}
-
-
-void Model::UseTexture()
-{
-	ID3D11DeviceContext* context = myRenderer->GetContext();
-
-	// Bind m_DiffuseTexture instead of myTextureView
-	context->PSSetShaderResources(0, 1, m_DiffuseTexture.GetAddressOf());
-	context->PSSetSamplers(0, 1, mySamplerState.GetAddressOf());
-}

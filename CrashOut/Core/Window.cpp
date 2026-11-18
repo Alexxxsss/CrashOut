@@ -31,21 +31,47 @@ LRESULT CALLBACK Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
     return DefWindowProcW(hwnd, uMsg, wParam, lParam);
 }
 
-LRESULT Window::HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT Window::HandleMessage(
+    HWND hwnd,
+    UINT uMsg,
+    WPARAM wParam,
+    LPARAM lParam)
 {
     if (myInputHandler != nullptr)
     {
-        myInputHandler->UpdateEvents(uMsg, wParam, lParam);
+        myInputHandler->UpdateEvents(
+            uMsg, wParam, lParam
+        );
     }
 
     switch (uMsg)
     {
+    case WM_SIZE:
+    {
+        myWidth = LOWORD(lParam);
+        myHeight = HIWORD(lParam);
+
+        myIsMinimized = (wParam == SIZE_MINIMIZED);
+
+        if (!myIsMinimized)
+        {
+            myWasResized = true;
+        }
+
+        return 0;
+    }
+
     case WM_DESTROY:
-        std::cout << "Window is closing..." << std::endl;
+        std::cout << "Window is closing..."
+            << std::endl;
+
         PostQuitMessage(0);
         return 0;
+
     default:
-        return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+        return DefWindowProcW(
+            hwnd, uMsg, wParam, lParam
+        );
     }
 }
 

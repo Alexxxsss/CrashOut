@@ -26,6 +26,20 @@ public:
     {
         return myInputHandler.get();
     }
+
+    bool WasResized()
+    {
+        bool resized = myWasResized;
+        myWasResized = false;
+
+        return resized;
+    }
+
+    bool IsMinimized() const
+    {
+        return myIsMinimized;
+    }
+
 private:
     static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     LRESULT HandleMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -34,4 +48,7 @@ private:
     HWND myHwnd = nullptr;
     int myWidth = 800;
     int myHeight = 600;
+
+    bool myWasResized = false;
+    bool myIsMinimized = false;
 };

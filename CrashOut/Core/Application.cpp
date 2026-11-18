@@ -35,7 +35,24 @@ namespace CrashOut
 
     bool Application::ProcessEvents()
     {
-        return myWindow.UpdateOpenWindow();
+        if (!myWindow.UpdateOpenWindow())
+            return false;
+
+        if (myWindow.WasResized() &&
+            !myWindow.IsMinimized())
+        {
+            UINT width = GetWindowWidth();
+            UINT height = GetWindowHeight();
+
+            if (width > 0 && height > 0)
+            {
+                myRenderer.Resize(width, height);
+
+                OnResize(width, height);
+            }
+        }
+
+        return true;
     }
 
 
@@ -68,8 +85,16 @@ namespace CrashOut
     }
 
 
+
     void Application::RenderFrame()
     {
+        if (myWindow.IsMinimized())
+            return;
+
+        if (GetWindowWidth() == 0 ||
+            GetWindowHeight() == 0)
+            return;
+
         myRenderer.BeginFrame(
             0.1f,
             0.2f,
@@ -77,13 +102,13 @@ namespace CrashOut
             1.0f
         );
 
-        myShader.Use();
         myRasterState.Use();
 
         OnRender();
 
         myRenderer.EndFrame();
     }
+
 
 
     void Application::CleanUp()
@@ -94,45 +119,9 @@ namespace CrashOut
 
 
 
-    void Application::RenderEntities(Registry& aRegistry, Camera& aCamera, Shader& aShader, Model& aDefaultModel)
-    {
-        // Compute View-Projection once for the whole frame
-        XMMATRIX view = aCamera.GetView();
-        XMMATRIX proj = aCamera.GetProjection();
-        XMMATRIX viewProj = view * proj;
 
-        auto* transformPool = aRegistry.GetPool<TransformComponent>();
-        if (!transformPool) return;
+    
 
-        for (auto& [entity, transform] : transformPool->data)
-        {
-            MeshComponent* mesh = aRegistry.GetComponent<MeshComponent>(entity);
-            if (!mesh || !mesh->model)
-                continue;
-
-            // 1. Compute World * View * Projection for this specific entity
-            XMMATRIX world = transform.GetWorldMatrix();
-            XMMATRIX mvp = world * viewProj;
-
-            // 2. Upload MVP to Constant Buffer register b0
-            aShader.UpdateModelViewProjectionBuffer(mvp);
-
-            // 3. Bind Entity's Texture (or default model texture if no custom material)
-            MaterialComponent* mat = aRegistry.GetComponent<MaterialComponent>(entity);
-            if (mat && mat->textureSRV)
-            {
-                // If the entity has a custom texture set up, bind it
-                // (Uses Model's UseTexture() or PSSetShaderResources depending on your implementation)
-                mesh->model->UseTexture();
-            }
-            else
-            {
-                mesh->model->UseTexture();
-            }
-
-            mesh->model->Render();
-        }
-    }
 
 
     void Application::DestroyEntity(Entity entity)

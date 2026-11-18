@@ -33,7 +33,14 @@ public:
     void CreateDepthBuffer(UINT width, UINT height);
     void CreateDepthStencilState();
 
+    void Resize(UINT width, UINT height);
+
+    Renderer(const Renderer&) = delete;
+    Renderer& operator=(const Renderer&) = delete;
 private:
+    void CreateRenderTarget();
+    void CreateViewport(UINT width, UINT height);
+
     ComPtr<ID3D11Device> m_device;
     ComPtr<ID3D11DeviceContext> m_deviceContext;
     ComPtr<IDXGISwapChain> m_swapChain;

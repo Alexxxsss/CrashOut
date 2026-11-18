@@ -2,13 +2,17 @@
 #include "Core/EngineEntry.h" 
 #include "Core/Vector.h" 
 #include <iostream>
-#include <DirectXMath.h> 
+#include <DirectXMath.h>
+#include <memory>
 
 class SandboxApp : public CrashOut::Application
 {
-
     Camera camera;
-    Model cubeModel;
+    std::shared_ptr<Model> cubeModel;
+
+    std::shared_ptr<Material> defaultMaterial;
+    std::shared_ptr<Material> brickMaterial;
+
     Entity entity1;
     Entity entity2;
     Entity floor;
@@ -29,10 +33,18 @@ public:
 
         camera.Init(GetWindowWidth(), GetWindowHeight());
 
+        cubeModel = std::make_shared<Model>();
+        cubeModel->Init(&GetRenderer());
+        cubeModel->Create();
 
-        cubeModel.Init(&GetRenderer());
-        cubeModel.Create();
-        cubeModel.LoadTexture(); // Default texture
+        defaultMaterial = std::make_shared<Material>();
+        defaultMaterial->Init(&GetRenderer());
+        defaultMaterial->LoadTexture(L"PrototypeTexture.png");
+
+        brickMaterial = std::make_shared<Material>();
+        brickMaterial->Init(&GetRenderer());
+        brickMaterial->LoadTexture(L"Brick.png");
+
 
 
 
@@ -41,8 +53,10 @@ public:
         t1 = &myRegistry.AddComponent<TransformComponent>(entity1);
         t1->position = { -1.5f, 0.0f, 4.0f };
         t1->scale = { 1.0f, 1.0f, 1.0f };
-        myRegistry.AddComponent<MeshComponent>(entity1, &cubeModel);
+        myRegistry.AddComponent<MeshComponent>(entity1, cubeModel);
+        myRegistry.AddComponent<MaterialComponent>(entity1, brickMaterial);
         myRegistry.AddComponent<BoxColliderComponent>(entity1);
+
 
 
         // --- Entity 2 (Center-right Smaller Cube) ---
@@ -51,7 +65,9 @@ public:
         t2 = &myRegistry.AddComponent<TransformComponent>(entity2);
         t2->position = { 1.5f, 0.5f, 5.0f };
         t2->scale = { 0.6f, 0.6f, 0.6f };
-        myRegistry.AddComponent<MeshComponent>(entity2, &cubeModel);
+        myRegistry.AddComponent<MeshComponent>(entity2, cubeModel);
+        myRegistry.AddComponent<MaterialComponent>(entity2, brickMaterial);
+
         myRegistry.AddComponent<BoxColliderComponent>(entity2);
 
 
@@ -59,7 +75,8 @@ public:
         t3 = &myRegistry.AddComponent<TransformComponent>(floor);
         t3->position = { 0.f, -2.f, 0.f };
         t3->scale = { 100.f, 0.2f, 100.f };
-        myRegistry.AddComponent<MeshComponent>(floor, &cubeModel);
+        myRegistry.AddComponent<MeshComponent>(floor, cubeModel);
+        myRegistry.AddComponent<MaterialComponent>(floor, defaultMaterial);
         auto& floorCollider = myRegistry.AddComponent<BoxColliderComponent>(floor);
         floorCollider.halfExtents = { 100.f, 0.2f, 100.f };
         floorCollider.isStatic = true;
@@ -72,11 +89,16 @@ public:
                 t2 = &myRegistry.AddComponent<TransformComponent>(entity2);
                 t2->position = { 1.5f + i, 0.5f, 5.0f+ y };
                 t2->scale = { 0.6f, 0.6f, 0.6f };
-                myRegistry.AddComponent<MeshComponent>(entity2, &cubeModel);
+                myRegistry.AddComponent<MeshComponent>(entity2, cubeModel);
+                myRegistry.AddComponent<MaterialComponent>(entity2, brickMaterial);
                 myRegistry.AddComponent<BoxColliderComponent>(entity2);
             }
             
         }
+
+        std::cout << "Model references: "
+            << cubeModel.use_count()
+            << std::endl;
         
 
     }
@@ -119,8 +141,19 @@ public:
         /// Måste fixa
         ///
         
-        RenderEntities(myRegistry, camera, GetShader(), cubeModel);
+        myRenderSystem.Render(
+            myRegistry,
+            camera,
+            GetShader(),
+            *defaultMaterial
+        );
 
+
+    }
+
+    void OnResize(UINT width, UINT height) override
+    {
+        camera.UpdateAspectRatio(width, height);
     }
 
     void OnShutdown() override

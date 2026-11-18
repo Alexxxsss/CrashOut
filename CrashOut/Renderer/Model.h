@@ -53,9 +53,9 @@ public:
     void CreateIndexBuffer();
 
     void Render();
-	void LoadTexture();
-	void UseTexture();
 
+	Model(const Model&) = delete;
+	Model& operator=(const Model&) = delete;
 
 private:
     Microsoft::WRL::ComPtr<ID3D11Buffer> myIndexBuffer = nullptr;
@@ -63,7 +63,5 @@ private:
 
     uint32_t myVertexCount = 0;
     Microsoft::WRL::ComPtr<ID3D11Buffer> myVertexBuffer;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_DiffuseTexture = nullptr;
-	Microsoft::WRL::ComPtr<ID3D11SamplerState>       mySamplerState;
     Renderer* myRenderer = nullptr; 
 };

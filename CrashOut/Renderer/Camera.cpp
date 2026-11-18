@@ -5,15 +5,24 @@
 
 void Camera::Init(int width, int height)
 {
-	constexpr float pitch_radians = DirectX::XMConvertToRadians(30.0f);
-	this->Rotate(pitch_radians, 0.0f);
-	this->UpdateAspectRatio(width, height);
-	this->CalculateProjection();
+	constexpr float pitch_radians =
+		DirectX::XMConvertToRadians(30.0f);
+
+	Rotate(pitch_radians, 0.0f);
+
+	UpdateAspectRatio(width, height);
 }
 
 void Camera::UpdateAspectRatio(int width, int height)
 {
-	myAspectRatio = static_cast<float>(width) / static_cast<float>(height);
+	if (width <= 0 || height <= 0)
+		return;
+
+	myAspectRatio =
+		static_cast<float>(width) /
+		static_cast<float>(height);
+
+	CalculateProjection();
 }
 
 

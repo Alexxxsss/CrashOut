@@ -7,6 +7,8 @@
 #include "../Renderer/Model.h"
 #include "../Renderer/Camera.h"
 #include "../Renderer/TextureSampler.h"
+#include "../Renderer/Material.h"
+#include "../Renderer/RenderSystem.h"
 #include "../Input/InputSystem.h"
 #include "../External/Timer.h"
 

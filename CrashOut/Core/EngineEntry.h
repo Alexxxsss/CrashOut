@@ -24,6 +24,11 @@ int main(int argc, char* argv[])
     {
         isRunning = app->ProcessEvents();
 
+        if (app->GetWindow().IsMinimized()) ///
+        {                                   /// This is for optimization
+            Sleep(16);                      /// Makes the main loop slower fps to save cpu power when minimized
+        }                                   ///
+
         if (!isRunning)
             break;
 

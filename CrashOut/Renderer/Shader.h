@@ -29,7 +29,10 @@ public:
 
 	// Bind the shader to the pipeline
 	void Use();
+	
 
+	Shader(const Shader&) = delete;
+	Shader& operator=(const Shader&) = delete;
 private:
 	Renderer* myRenderer;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> myVertexShader;

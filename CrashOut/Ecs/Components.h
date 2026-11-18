@@ -2,7 +2,10 @@
 #include <DirectXMath.h>
 #include <d3d11.h>
 #include <box3d/box3d.h>
-#include "Renderer/Model.h"
+#include <memory>
+
+class Material;
+class Model;
 
 struct TransformComponent
 {
@@ -23,13 +26,12 @@ struct TransformComponent
 
 struct MeshComponent
 {
-    Model* model = nullptr;
+    std::shared_ptr<Model> model = nullptr;
 };
 
 struct MaterialComponent
 {
-    ID3D11ShaderResourceView* textureSRV = nullptr;
-    ID3D11SamplerState* samplerState = nullptr;
+    std::shared_ptr<Material> material = nullptr;
 };
 
 struct BoxColliderComponent

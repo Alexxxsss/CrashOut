@@ -67,10 +67,12 @@ bool Renderer::Initialize(HWND hwnd, UINT width, UINT height)
         return false;
     }
 
+
+    CreateRenderTarget();
     CreateDepthBuffer(width, height);
     CreateDepthStencilState();
+    CreateViewport(width, height);
 
-    // 4. Bind the Render Target View
     m_deviceContext->OMSetRenderTargets(
         1,
         m_renderTargetView.GetAddressOf(),
@@ -81,19 +83,13 @@ bool Renderer::Initialize(HWND hwnd, UINT width, UINT height)
         m_depthStencilState.Get(),
         0
     );
-    // 5. Setup the Viewport
-    m_viewport.TopLeftX = 0.0f;
-    m_viewport.TopLeftY = 0.0f;
-    m_viewport.Width = static_cast<float>(width);
-    m_viewport.Height = static_cast<float>(height);
-    m_viewport.MinDepth = 0.0f;
-    m_viewport.MaxDepth = 1.0f;
 
-    m_deviceContext->RSSetViewports(1, &m_viewport);
+    std::cout << "DirectX 11 initialized successfully."
+        << std::endl;
 
-    std::cout << "DirectX 11 initialized successfully." << std::endl;
     return true;
 }
+
 
 void Renderer::BeginFrame(float r, float g, float b, float a)
 {
@@ -190,4 +186,84 @@ void Renderer::CreateDepthStencilState()
 
     if (FAILED(hr))
         throw std::runtime_error("Failed to create depth state");
+}
+
+
+void Renderer::CreateRenderTarget()
+{
+    ComPtr<ID3D11Texture2D> backBuffer;
+
+    DX::Check(m_swapChain->GetBuffer(
+        0,
+        IID_PPV_ARGS(backBuffer.GetAddressOf())
+    ));
+
+    DX::Check(m_device->CreateRenderTargetView(
+        backBuffer.Get(),
+        nullptr,
+        m_renderTargetView.ReleaseAndGetAddressOf()
+    ));
+}
+
+
+void Renderer::CreateViewport(UINT width, UINT height)
+{
+    m_viewport.TopLeftX = 0.0f;
+    m_viewport.TopLeftY = 0.0f;
+
+    m_viewport.Width = static_cast<float>(width);
+    m_viewport.Height = static_cast<float>(height);
+
+    m_viewport.MinDepth = 0.0f;
+    m_viewport.MaxDepth = 1.0f;
+
+    m_deviceContext->RSSetViewports(
+        1, &m_viewport
+    );
+}
+
+
+void Renderer::Resize(UINT width, UINT height)
+{
+    if (!m_swapChain || width == 0 || height == 0)
+        return;
+
+    // 1. Unbind the current render targets.
+    m_deviceContext->OMSetRenderTargets(
+        0, nullptr, nullptr
+    );
+
+    // 2. Release old size-dependent resources.
+    m_renderTargetView.Reset();
+    m_depthStencilView.Reset();
+    m_depthBuffer.Reset();
+
+    // 3. Resize the swap chain.
+    DXGI_SWAP_CHAIN_DESC desc = {};
+
+    DX::Check(m_swapChain->GetDesc(&desc));
+
+    DX::Check(m_swapChain->ResizeBuffers(
+        0,
+        width,
+        height,
+        DXGI_FORMAT_UNKNOWN,
+        desc.Flags
+    ));
+
+    // 4. Recreate the resources.
+    CreateRenderTarget();
+    CreateDepthBuffer(width, height);
+    CreateViewport(width, height);
+
+    // 5. Bind the new render targets.
+    m_deviceContext->OMSetRenderTargets(
+        1,
+        m_renderTargetView.GetAddressOf(),
+        m_depthStencilView.Get()
+    );
+
+    std::cout << "Renderer resized: "
+        << width << " x " << height
+        << std::endl;
 }
