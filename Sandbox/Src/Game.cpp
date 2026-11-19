@@ -37,7 +37,6 @@ public:
         std::cout << "Sandbox OnStart called!\n";
 
         camera.Init(GetWindowWidth(), GetWindowHeight());
-
         myGizmoSystem.Init(&GetRenderer());
 
         cubeModel = std::make_shared<Model>();
@@ -140,25 +139,26 @@ public:
 
         }
 
-        if (GetWindow().GetInputHandler()->IsKeyDown('W'))
-        {
-            b3Body_SetAwake(c1->bodyId, true);
-            b3Body_SetLinearVelocity(c1->bodyId, { 0.0f, 0.f, 3.0f * speed });
-        }
-        if (GetWindow().GetInputHandler()->IsKeyDown('A'))
-        {
-            b3Body_SetAwake(c1->bodyId, true);
-            b3Body_SetLinearVelocity(c1->bodyId, { -3.0f * speed, 0.f, 0.f });
-        }
-        if (GetWindow().GetInputHandler()->IsKeyDown('S'))
-        {
-            b3Body_SetAwake(c1->bodyId, true);
-            b3Body_SetLinearVelocity(c1->bodyId, { 0.0f, 0.f, -3.0f * speed });
-        }
-        if (GetWindow().GetInputHandler()->IsKeyDown('D'))
-        {
-            b3Body_SetLinearVelocity(c1->bodyId, { 3.0f * speed, 0.f, 0.f });
+        b3Vec3 moveDir = { 0.0f, 0.0f, 0.0f };
 
+        if (GetWindow().GetInputHandler()->IsKeyDown('W'))
+            moveDir.z += 1.0f;
+        if (GetWindow().GetInputHandler()->IsKeyDown('S'))
+            moveDir.z -= 1.0f;
+        if (GetWindow().GetInputHandler()->IsKeyDown('A'))
+            moveDir.x -= 1.0f;
+        if (GetWindow().GetInputHandler()->IsKeyDown('D'))
+            moveDir.x += 1.0f;
+
+        float lengthSq = moveDir.x * moveDir.x + moveDir.z * moveDir.z;
+        if (lengthSq > 0.0f)
+        {
+            float invLength = 1.0f / std::sqrt(lengthSq);
+            moveDir.x *= invLength;
+            moveDir.z *= invLength;
+
+            b3Body_SetAwake(c1->bodyId, true);
+            b3Body_SetLinearVelocity(c1->bodyId, { moveDir.x * 3.0f * speed, 0.0f, moveDir.z * 3.0f * speed });
         }
 
 
