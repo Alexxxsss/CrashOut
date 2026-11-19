@@ -2,9 +2,10 @@
 
 #include <d3d11.h>
 #include <wrl/client.h>
-#include <string>
+#include <memory>
 
 class Renderer;
+class Texture;
 
 class Material
 {
@@ -12,19 +13,19 @@ public:
     Material() = default;
     ~Material() = default;
 
+    Material(const Material&) = delete;
+    Material& operator=(const Material&) = delete;
+
     void Init(Renderer* renderer);
 
-    void LoadTexture(const std::wstring& path);
+    void SetTexture(std::shared_ptr<Texture> aTexture);
 
     void Use();
 
-    Material(const Material&) = delete;
-    Material& operator=(const Material&) = delete;
 private:
     Renderer* myRenderer = nullptr;
 
-    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>
-        myDiffuseTexture;
+    std::shared_ptr<Texture> myDiffuseTexture;
 
     Microsoft::WRL::ComPtr<ID3D11SamplerState>
         mySamplerState;

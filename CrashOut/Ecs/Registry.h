@@ -34,7 +34,9 @@ public:
         auto it = data.find(entity);
 
         if (it == data.end())
+        {
             return;
+        }
 
         if (onRemove)
         {
@@ -64,14 +66,15 @@ public:
 
     bool HasEntity(Entity entity) const
     {
-        return m_AliveEntities.find(entity)
-            != m_AliveEntities.end();
+        return m_AliveEntities.find(entity) != m_AliveEntities.end();
     }
 
     void DestroyEntity(Entity entity)
     {
         if (!HasEntity(entity))
+        {
             return;
+        }
 
         for (auto& [type, pool] : m_Pools)
         {
@@ -85,19 +88,20 @@ public:
     T& AddComponent(Entity entity, Args&&... args)
     {
         if (!HasEntity(entity))
+        {
             throw std::runtime_error("Invalid entity");
+        }
 
         auto pool = GetOrCreatePool<T>();
 
-        auto [it, inserted] = pool->data.try_emplace(
-            entity,
-            T{ std::forward<Args>(args)... }
-        );
+        auto [it, inserted] = pool->data.try_emplace(entity, T{ std::forward<Args>(args)... });
 
         if (!inserted)
+        {
             throw std::runtime_error(
                 "Entity already has this component"
             );
+        }
 
         return it->second;
     }
@@ -106,17 +110,23 @@ public:
     T* GetComponent(Entity entity)
     {
         if (!HasEntity(entity))
+        {
             return nullptr;
+        }
 
         auto* pool = GetPool<T>();
 
         if (!pool)
+        {
             return nullptr;
+        }
 
         auto it = pool->data.find(entity);
 
         if (it == pool->data.end())
+        {
             return nullptr;
+        }
 
         return &it->second;
     }
@@ -126,23 +136,28 @@ public:
     {
         auto* pool = GetPool<T>();
 
-        return pool &&
-            pool->data.find(entity) != pool->data.end();
+        return pool && pool->data.find(entity) != pool->data.end();
     }
 
     template<typename T>
     bool RemoveComponent(Entity entity)
     {
         if (!HasEntity(entity))
+        {
             return false;
+        }
 
         auto* pool = GetPool<T>();
 
         if (!pool)
+        {
             return false;
+        }
 
         if (pool->data.find(entity) == pool->data.end())
+        {
             return false;
+        }
 
         pool->RemoveEntity(entity);
 
@@ -155,7 +170,9 @@ public:
         auto it = m_Pools.find(std::type_index(typeid(T)));
 
         if (it == m_Pools.end())
+        {
             return nullptr;
+        }
 
         return static_cast<ComponentPool<T>*>(it->second.get());
     }
@@ -166,6 +183,16 @@ public:
         auto* pool = GetOrCreatePool<T>();
 
         pool->onRemove = std::move(callback);
+    }
+
+    void Clear()
+    {
+        std::vector<Entity> entities(m_AliveEntities.begin(), m_AliveEntities.end());
+
+        for (Entity entity : entities)
+        {
+            DestroyEntity(entity);
+        }
     }
 
 private:

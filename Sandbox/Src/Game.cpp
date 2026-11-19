@@ -7,6 +7,7 @@
 #include <cmath>
 #include <stdexcept>
 #include "Renderer/DebugDraw/GizmoSystem.h"
+#include "Renderer/Texture.h"
 
 class SandboxApp : public CrashOut::Application
 {
@@ -29,7 +30,6 @@ class SandboxApp : public CrashOut::Application
 public:
     SandboxApp() = default;
 
-
     ~SandboxApp() override = default;
 
     void OnStart() override
@@ -39,26 +39,22 @@ public:
         camera.Init(GetWindowWidth(), GetWindowHeight());
         myGizmoSystem.Init(&GetRenderer());
 
-        cubeModel = std::make_shared<Model>();
-        cubeModel->Init(&GetRenderer());
-        cubeModel->Create("Cube.obj");
+        auto& resources = GetResourceManager();
 
-        monkeyModel = std::make_shared<Model>();
-        monkeyModel->Init(&GetRenderer());
-        monkeyModel->Create("Basic.obj");
 
-        defaultMaterial = std::make_shared<Material>();
-        defaultMaterial->Init(&GetRenderer());
-        defaultMaterial->LoadTexture(L"PrototypeTexture.png");
 
-        brickMaterial = std::make_shared<Material>();
-        brickMaterial->Init(&GetRenderer());
-        brickMaterial->LoadTexture(L"Brick.png");
+        cubeModel = resources.LoadModel("Cube.obj");
+        monkeyModel = resources.LoadModel("Basic.obj");
+
+        auto defaultTexture = resources.LoadTexture(L"PrototypeTexture.png");
+        auto brickTexture = resources.LoadTexture(L"Brick.png");
+
+        defaultMaterial = resources.CreateMaterial("DefaultMaterial", defaultTexture);
+        brickMaterial = resources.CreateMaterial("BrickMaterial", brickTexture);
 
 
 
 
-        // --- Entity 1 (Center-left Cube) ---
         entity1 = myRegistry.CreateEntity();
         t1 = &myRegistry.AddComponent<TransformComponent>(entity1);
         t1->position = { -1.5f, 0.0f, 4.0f };
@@ -68,8 +64,6 @@ public:
         auto& entity1Collider = myRegistry.AddComponent<BoxColliderComponent>(entity1);
         entity1Collider.halfExtents = { 1.f, 1.f, 1.f };
 
-
-        // --- Entity 2 (Center-right Smaller Cube) ---
 
         entity2 = myRegistry.CreateEntity();
         t2 = &myRegistry.AddComponent<TransformComponent>(entity2);
@@ -81,16 +75,16 @@ public:
         entity2Collider.halfExtents = { 1.f, 1.f, 1.f };
 
 
-
         floor = myRegistry.CreateEntity();
         t3 = &myRegistry.AddComponent<TransformComponent>(floor);
         t3->position = { 0.f, -2.f, 0.f };
-        t3->scale = { 50.f, 0.1f, 50.f };
+        t3->scale = { 30.f, 0.1f, 30.f };
         myRegistry.AddComponent<MeshComponent>(floor, cubeModel);
         myRegistry.AddComponent<MaterialComponent>(floor, defaultMaterial);
         auto& floorCollider = myRegistry.AddComponent<BoxColliderComponent>(floor);
         floorCollider.halfExtents = { 1.f, 1.f, 1.1f };
         floorCollider.isStatic = true;
+
 
         for (int i = 0; i < 20; i+=2)
         {
@@ -104,15 +98,12 @@ public:
                 myRegistry.AddComponent<MaterialComponent>(entity3, brickMaterial);
                 auto& entity3Collider = myRegistry.AddComponent<BoxColliderComponent>(entity3);
                 entity3Collider.halfExtents = { 1.f, 1.f, 1.1f };
-
             }
         }
 
         std::cout << "Model references: "
             << cubeModel.use_count()
             << std::endl;
-        
-
     }
 
     void OnUpdate(float deltaTime) override
@@ -168,6 +159,7 @@ public:
         }
         if (GetWindow().GetInputHandler()->IsKeyPressed('T'))
         {
+
             auto* transform =
                 myRegistry.GetComponent<TransformComponent>(floor);
 
@@ -251,8 +243,24 @@ public:
 
     void OnShutdown() override
     {
+        std::cout << "Sandbox shutting down...\n";
 
-        std::cout << "Sandbox OnShutdown called!\n";
+        myRegistry.Clear();
+
+        cubeModel.reset();
+        monkeyModel.reset();
+
+        defaultMaterial.reset();
+        brickMaterial.reset();
+
+        std::size_t removed = GetResourceManager().CollectUnused();
+
+        std::cout
+            << "Unused cache entries removed: "
+            << removed
+            << '\n';
+
+        std::cout << "Sandbox shutdown complete.\n";
     }
 };
 

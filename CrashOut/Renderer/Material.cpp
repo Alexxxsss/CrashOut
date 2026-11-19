@@ -1,27 +1,12 @@
-
 #include "Material.h"
 #include "Renderer.h"
-#include "../External/WICTextureLoader11.h"
+#include "Texture.h"
 
-#include <stdexcept>
+#include <utility>
 
 void Material::Init(Renderer* renderer)
 {
     myRenderer = renderer;
-}
-
-void Material::LoadTexture(const std::wstring& path)
-{
-    ID3D11Device* device = myRenderer->GetDevice();
-    ID3D11DeviceContext* context = myRenderer->GetContext();
-
-    DX::Check(DirectX::CreateWICTextureFromFile(
-        device,
-        context,
-        path.c_str(),
-        nullptr,
-        myDiffuseTexture.ReleaseAndGetAddressOf()
-    ));
 
     D3D11_SAMPLER_DESC desc = {};
 
@@ -35,19 +20,35 @@ void Material::LoadTexture(const std::wstring& path)
     desc.MinLOD = 0;
     desc.MaxLOD = D3D11_FLOAT32_MAX;
 
-    DX::Check(device->CreateSamplerState(
+    DX::Check(myRenderer->GetDevice()->CreateSamplerState(
         &desc,
         mySamplerState.ReleaseAndGetAddressOf()
     ));
 }
 
+void Material::SetTexture(
+    std::shared_ptr<Texture> aTexture)
+{
+    myDiffuseTexture = std::move(aTexture);
+}
+
 void Material::Use()
 {
-    ID3D11DeviceContext* context = myRenderer->GetContext();
+    ID3D11DeviceContext* context =
+        myRenderer->GetContext();
 
-    context->PSSetShaderResources(
-        0, 1, myDiffuseTexture.GetAddressOf()
-    );
+    if (myDiffuseTexture)
+    {
+        myDiffuseTexture->Bind(*myRenderer, 0);
+    }
+    else
+    {
+        ID3D11ShaderResourceView* emptyTexture = nullptr;
+
+        context->PSSetShaderResources(
+            0, 1, &emptyTexture
+        );
+    }
 
     context->PSSetSamplers(
         0, 1, mySamplerState.GetAddressOf()

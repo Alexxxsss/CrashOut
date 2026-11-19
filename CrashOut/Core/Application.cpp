@@ -20,21 +20,15 @@ namespace CrashOut
         {
             throw std::runtime_error("Renderer initialization failed");
         }
-        myShader.Init(&myRenderer);
         myRasterState.Init(&myRenderer);
 
         //myRenderer.CreateDepthBuffer(GetWindowWidth(), GetWindowHeight());
         //myRenderer.CreateDepthStencilState();
 
-        myShader.LoadVertexShader(
-            L"../../CrashOut/Shaders/Vertex.hlsl"
-        );
-
-        myShader.LoadPixelShader(
+        myShader = myResourceManager.LoadShader(
+            L"../../CrashOut/Shaders/Vertex.hlsl",
             L"../../CrashOut/Shaders/Pixel.hlsl"
         );
-
-        myShader.CreateWorldViewProjectionConstantBuffer();
 
 
         myRegistry.SetOnRemove<BoxColliderComponent>(

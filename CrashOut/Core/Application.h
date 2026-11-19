@@ -4,7 +4,10 @@
 #include <windows.h>
 #include "Window.h"
 #include "Engine.h"
+#include <memory>
 #include "../Renderer/RenderSystem.h"
+#include "../Resources/ResourceManager.h"
+#include "../Renderer/Shader.h"
 
 namespace CrashOut
 {
@@ -14,7 +17,6 @@ namespace CrashOut
         Application();
         virtual ~Application() = default;
 
-        // Prevent copying/moving for engine stability
         Application(const Application&) = delete;
         Application& operator=(const Application&) = delete;
 
@@ -31,10 +33,13 @@ namespace CrashOut
 
         UINT GetWindowHeight() const { return myWindow.GetHeight(); }
         Renderer& GetRenderer() { return myRenderer; }
-        Shader& GetShader() { return myShader; }
+        Shader& GetShader() { return *myShader; }
         RasterState& GetRasterState() { return myRasterState; }
         Window& GetWindow() { return myWindow; }
-
+        ResourceManager& GetResourceManager()
+        {
+            return myResourceManager;
+        }
 
         virtual void OnStart() = 0;
         virtual void OnUpdate(float deltaTime) = 0;
@@ -43,6 +48,7 @@ namespace CrashOut
         virtual void OnCollision(const CollisionEvent& event) {}
 
         virtual void OnResize(UINT width, UINT height) {}
+
     protected:
         const UINT myScreenWidth = 1280;
         const UINT myScreenHeight = 720;
@@ -50,7 +56,8 @@ namespace CrashOut
         Window myWindow;
 
         Renderer myRenderer;
-        Shader myShader;
+        ResourceManager myResourceManager{ myRenderer };
+        std::shared_ptr<Shader> myShader;
         RasterState myRasterState;
         RenderSystem myRenderSystem;
 
