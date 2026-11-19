@@ -65,7 +65,7 @@ namespace
         {
             throw std::runtime_error(
                 std::string("Shader compilation failed") +
-                "\nFile: " + fullPath.u8string() +
+                "\nFile: " + fullPath.string() +
                 "\nEntry point: " + aEntryPoint +
                 "\nTarget: " + aTarget +
                 "\nHRESULT: " + DX::FormatHRESULT(hr) +
