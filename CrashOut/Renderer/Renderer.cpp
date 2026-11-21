@@ -52,7 +52,7 @@ bool Renderer::Initialize(HWND hwnd, UINT width, UINT height)
     }
 
     // 3. Get the back buffer and create the Render Target View (RTV)
-    ComPtr<ID3D11Texture2D> backBuffer;
+    /*ComPtr<ID3D11Texture2D> backBuffer;
     hr = m_swapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backBuffer.GetAddressOf()));
     if (FAILED(hr))
     {
@@ -66,7 +66,7 @@ bool Renderer::Initialize(HWND hwnd, UINT width, UINT height)
         std::cerr << "Failed to create Render Target View! HR: " << std::hex << hr << std::endl;
         return false;
     }
-
+    */
 
     CreateRenderTarget();
     CreateDepthBuffer(width, height);

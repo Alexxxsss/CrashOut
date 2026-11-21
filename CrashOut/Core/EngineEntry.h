@@ -23,6 +23,7 @@ int main(int argc, char* argv[])
             return EXIT_FAILURE;
 
         app->OnStart();
+        app->InitializePhysics();
 
         bool isRunning = true;
 
@@ -35,12 +36,14 @@ int main(int argc, char* argv[])
 
             timer.Update();
 
-            float deltaTime = timer.GetDeltaTime();
 
             if (app->GetWindow().IsMinimized()) ///
             {                                   /// This is for optimization
                 Sleep(16);                      /// Makes the main loop slower fps to save cpu power when minimized
-            }                                   ///
+                continue;                       ///
+            }                                   
+
+            float deltaTime = timer.GetDeltaTime();
 
             app->Update(deltaTime);
             app->RenderFrame();

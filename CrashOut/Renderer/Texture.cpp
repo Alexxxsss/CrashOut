@@ -1,16 +1,37 @@
 #include "Texture.h"
 #include "Renderer.h"
+#include <filesystem>
+#include <stdexcept>
 #include "../External/WICTextureLoader11.h"
 
-void Texture::Load(Renderer& aRenderer, const std::wstring& aPath)
+
+void Texture::Load(
+    Renderer& aRenderer,
+    const std::wstring& aPath)
 {
-    DX::Check(DirectX::CreateWICTextureFromFile(
+    const std::filesystem::path path(aPath);
+
+    if (!std::filesystem::is_regular_file(path))
+    {
+        throw std::runtime_error(
+            "Texture file does not exist: " +
+            path.u8string()
+        );
+    }
+
+    HRESULT hr = DirectX::CreateWICTextureFromFile(
         aRenderer.GetDevice(),
         aRenderer.GetContext(),
         aPath.c_str(),
         nullptr,
         myTextureView.ReleaseAndGetAddressOf()
-    ));
+    );
+
+    DX::Check(
+        hr,
+        "Failed to load texture: " +
+        path.u8string()
+    );
 }
 
 void Texture::Bind(Renderer& aRenderer, UINT aSlot) const

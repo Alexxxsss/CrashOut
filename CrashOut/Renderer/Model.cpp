@@ -7,6 +7,7 @@
 #include <map>
 #include <filesystem>
 #include <stdexcept>
+#include <algorithm>
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "../External/tiny_obj_loader.h"
@@ -20,6 +21,13 @@ void Model::Init(Renderer* renderer)
 
 void Model::Create(const std::string& path)
 {
+    if (!std::filesystem::is_regular_file(path))
+    {
+        throw std::runtime_error(
+            "Model file does not exist: " + path
+        );
+    }
+
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
@@ -131,6 +139,12 @@ void Model::Create(const std::string& path)
     {
         throw std::runtime_error("Empty model: " + path);
     }
+
+    for (size_t i = 0; i + 2 < indices.size(); i += 3)
+    {
+        std::swap(indices[i + 1], indices[i + 2]);
+    }
+
 
     CreateVertexBuffer(vertices);
     CreateIndexBuffer(indices);

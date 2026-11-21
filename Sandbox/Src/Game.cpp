@@ -1,6 +1,7 @@
 #include "Game.h" 
 #include "Core/EngineEntry.h" 
 #include "Core/Vector.h" 
+#include "Core/AssetPath.h"
 #include <iostream>
 #include <DirectXMath.h>
 #include <memory>
@@ -8,6 +9,7 @@
 #include <stdexcept>
 #include "Renderer/DebugDraw/GizmoSystem.h"
 #include "Renderer/Texture.h"
+#include <cassert>
 
 class SandboxApp : public CrashOut::Application
 {
@@ -43,11 +45,11 @@ public:
 
 
 
-        cubeModel = resources.LoadModel("Cube.obj");
-        monkeyModel = resources.LoadModel("Basic.obj");
+        cubeModel = resources.LoadModel(CrashOut::AssetPath(L"Assets/Models/Cube.obj").string());
+        monkeyModel = resources.LoadModel(CrashOut::AssetPath(L"Assets/Models/Basic.obj").string());
 
-        auto defaultTexture = resources.LoadTexture(L"PrototypeTexture.png");
-        auto brickTexture = resources.LoadTexture(L"Brick.png");
+        auto defaultTexture = resources.LoadTexture(CrashOut::AssetPath(L"Assets/Textures/PrototypeTexture.png").wstring());
+        auto brickTexture = resources.LoadTexture(CrashOut::AssetPath(L"Assets/Textures/Brick.png").wstring());
 
         defaultMaterial = resources.CreateMaterial("DefaultMaterial", defaultTexture);
         brickMaterial = resources.CreateMaterial("BrickMaterial", brickTexture);
@@ -82,7 +84,7 @@ public:
         myRegistry.AddComponent<MeshComponent>(floor, cubeModel);
         myRegistry.AddComponent<MaterialComponent>(floor, defaultMaterial);
         auto& floorCollider = myRegistry.AddComponent<BoxColliderComponent>(floor);
-        floorCollider.halfExtents = { 1.f, 1.f, 1.1f };
+        floorCollider.halfExtents = { 1.f, 1.f, 1.f };
         floorCollider.isStatic = true;
 
 
@@ -104,84 +106,106 @@ public:
         std::cout << "Model references: "
             << cubeModel.use_count()
             << std::endl;
+
     }
 
     void OnUpdate(float deltaTime) override
     {
-        float speed = 1;
-        auto* c1 = myRegistry.GetComponent<BoxColliderComponent>(entity1);
+        auto* input = GetWindow().GetInputHandler();
 
-        if (GetWindow().GetInputHandler()->IsKeyDown('R'))
-        {
-            auto* c2 = myRegistry.GetComponent<BoxColliderComponent>(entity2);
-
-            if (c1 && b3Body_IsValid(c1->bodyId))
-            {
-                b3Body_SetAwake(c1->bodyId, true);
-                b3Body_SetAngularVelocity(c1->bodyId, { 0.0f, 2.5f * speed, 0.0f });
-                b3Body_SetLinearVelocity(c1->bodyId, { 0.0f, 2.5f * speed, 0.0f });
-
-            }
-            if (c2 && b3Body_IsValid(c2->bodyId))
-            {
-                b3Body_SetAwake(c2->bodyId, true);
-                b3Body_SetAngularVelocity(c2->bodyId, { 5.0f * speed, 0.0f, 2.5f * speed });
-            }
-
-        }
-
-        b3Vec3 moveDir = { 0.0f, 0.0f, 0.0f };
-
-        if (GetWindow().GetInputHandler()->IsKeyDown('W'))
-            moveDir.z += 1.0f;
-        if (GetWindow().GetInputHandler()->IsKeyDown('S'))
-            moveDir.z -= 1.0f;
-        if (GetWindow().GetInputHandler()->IsKeyDown('A'))
-            moveDir.x -= 1.0f;
-        if (GetWindow().GetInputHandler()->IsKeyDown('D'))
-            moveDir.x += 1.0f;
-
-        float lengthSq = moveDir.x * moveDir.x + moveDir.z * moveDir.z;
-        if (lengthSq > 0.0f)
-        {
-            float invLength = 1.0f / std::sqrt(lengthSq);
-            moveDir.x *= invLength;
-            moveDir.z *= invLength;
-
-            b3Body_SetAwake(c1->bodyId, true);
-            b3Body_SetLinearVelocity(c1->bodyId, { moveDir.x * 3.0f * speed, 0.0f, moveDir.z * 3.0f * speed });
-        }
-
-
-        if (GetWindow().GetInputHandler()->IsKeyDown('E'))
+        if (input->IsKeyPressed('E'))
         {
             DestroyEntity(floor);
         }
-        if (GetWindow().GetInputHandler()->IsKeyPressed('T'))
-        {
 
+        if (input->IsKeyPressed('T'))
+        {
             auto* transform =
-                myRegistry.GetComponent<TransformComponent>(floor);
+                myRegistry.GetComponent<TransformComponent>(
+                    floor
+                );
 
             if (transform)
             {
                 transform->position.y -= 1.0f;
             }
         }
-        
 
-        if (GetWindow().GetInputHandler()->IsKeyDown('Y'))
+        if (input->IsKeyPressed(VK_F1))
+        {
+            GetRasterState().ToggleWireframe();
+        }
+    }
+
+
+
+
+
+
+    void OnFixedUpdate(float fixedDeltaTime) override
+    {
+        auto* input = GetWindow().GetInputHandler();
+
+        float x = 0.0f;
+        float z = 0.0f;
+
+        if (input->IsKeyDown('W')) z += 1.0f;
+        if (input->IsKeyDown('S')) z -= 1.0f;
+        if (input->IsKeyDown('A')) x -= 1.0f;
+        if (input->IsKeyDown('D')) x += 1.0f;
+
+        // Normalize diagonal movement.
+        float lengthSq = x * x + z * z;
+
+        if (lengthSq > 0.0f)
+        {
+            float invLength = 1.0f / std::sqrt(lengthSq);
+
+            x *= invLength;
+            z *= invLength;
+        }
+
+        constexpr float movementSpeed = 3.0f;
+
+        myPhysics.SetHorizontalVelocity(
+            myRegistry,
+            entity1,
+            x * movementSpeed,
+            z * movementSpeed
+        );
+
+        // Rotate objects when holding R.
+        if (input->IsKeyDown('R'))
+        {
+            myPhysics.SetAngularVelocity(
+                myRegistry,
+                entity1,
+                { 0.0f, 2.5f, 0.0f }
+            );
+
+            myPhysics.SetAngularVelocity(
+                myRegistry,
+                entity2,
+                { 5.0f, 0.0f, 2.5f }
+            );
+        }
+
+        // Move the static floor using a fixed timestep.
+        if (input->IsKeyDown('Y'))
         {
             auto* transform =
-                myRegistry.GetComponent<TransformComponent>(floor);
+                myRegistry.GetComponent<TransformComponent>(
+                    floor
+                );
 
             if (transform)
             {
-                transform->position.z -= 5.0f*deltaTime;
+                transform->position.z -=
+                    5.0f * fixedDeltaTime;
             }
         }
-
     }
+
 
     void OnRender() override
     {

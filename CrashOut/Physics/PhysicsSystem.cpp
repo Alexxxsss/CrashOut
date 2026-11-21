@@ -121,7 +121,7 @@ void PhysicsSystem::UpdateTransforms(Registry& ecsRegistry, float timeStep)
     if (!b3World_IsValid(m_worldId))
         return;
 
-    PrepareBodies(ecsRegistry);
+    EnsureBodies(ecsRegistry);
 
     SyncECSToPhysics(ecsRegistry);
 
@@ -136,7 +136,7 @@ void PhysicsSystem::UpdateTransforms(Registry& ecsRegistry, float timeStep)
 
 void PhysicsSystem::DestroyBoxCollider(BoxColliderComponent& collider)
 {
-    if (B3_IS_NON_NULL(collider.shapeId))
+    if (b3Shape_IsValid(collider.shapeId))
     {
         m_RetiredShapes.push_back(
             b3StoreShapeId(collider.shapeId)
@@ -154,7 +154,7 @@ void PhysicsSystem::DestroyBoxCollider(BoxColliderComponent& collider)
 }
 
 
-void PhysicsSystem::PrepareBodies(Registry& registry)
+void PhysicsSystem::EnsureBodies(Registry& registry)
 {
     auto* pool = registry.GetPool<BoxColliderComponent>();
 
@@ -379,4 +379,61 @@ void PhysicsSystem::CollectCollisionEvents()
     }
 
     m_RetiredShapes.clear();
+}
+
+
+
+
+bool PhysicsSystem::SetHorizontalVelocity(
+    Registry& registry,
+    Entity entity,
+    float x,
+    float z)
+{
+    auto* collider =
+        registry.GetComponent<BoxColliderComponent>(entity);
+
+    if (!collider ||
+        !b3Body_IsValid(collider->bodyId))
+    {
+        return false;
+    }
+
+    if (b3Body_GetType(collider->bodyId) != b3_dynamicBody)
+        return false;
+
+    b3Vec3 velocity =
+        b3Body_GetLinearVelocity(collider->bodyId);
+
+    velocity.x = x;
+    velocity.z = z;
+
+    // Preserve Y velocity so gravity continues working.
+    b3Body_SetAwake(collider->bodyId, true);
+    b3Body_SetLinearVelocity(collider->bodyId, velocity);
+
+    return true;
+}
+
+bool PhysicsSystem::SetAngularVelocity(
+    Registry& registry,
+    Entity entity,
+    b3Vec3 velocity)
+{
+    auto* collider =
+        registry.GetComponent<BoxColliderComponent>(entity);
+
+    if (!collider ||
+        !b3Body_IsValid(collider->bodyId))
+    {
+        return false;
+    }
+
+    if (b3Body_GetType(collider->bodyId) != b3_dynamicBody)
+        return false;
+
+    b3Body_SetAwake(collider->bodyId, true);
+    b3Body_SetAngularVelocity(collider->bodyId, velocity);
+
+    return true;
 }

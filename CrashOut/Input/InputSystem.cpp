@@ -137,3 +137,18 @@ void CommonUtilities::InputHandler::UpdateInput()
 	myWheelDelta = myInputWheelDelta;
 	myInputWheelDelta = 0;
 }
+
+
+void CommonUtilities::InputHandler::ClearInput()
+{
+	myInputState.fill(false);
+	myCurrentState.fill(false);
+	myPreviousState.fill(false);
+
+	myInputWheelDelta = 0;
+	myWheelDelta = 0;
+
+	myCurrentMousePos = myInputMousePos;
+	myPreviousMousePos = myInputMousePos;
+	myMouseDelta = { 0, 0 };
+}

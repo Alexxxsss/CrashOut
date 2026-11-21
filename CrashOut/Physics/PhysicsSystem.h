@@ -43,8 +43,22 @@ public:
         return m_CollisionEvents;
     }
 
+    void EnsureBodies(Registry& registry);
+
+    bool SetHorizontalVelocity(
+        Registry& registry,
+        Entity entity,
+        float x,
+        float z
+    );
+
+    bool SetAngularVelocity(
+        Registry& registry,
+        Entity entity,
+        b3Vec3 velocity
+    );
+
 private:
-    void PrepareBodies(Registry& registry);
     void SyncPhysicsToECS(Registry& registry);
     void SyncECSToPhysics(Registry& registry);
     b3WorldId m_worldId = b3_nullWorldId;

@@ -42,7 +42,8 @@ namespace CommonUtilities
 		void SetMousePosition(int aX, int aY);
 		void CaptureMouse();
 		void ReleaseMouse();
-
 		void UpdateInput();
+
+		void ClearInput();
 	};
 }

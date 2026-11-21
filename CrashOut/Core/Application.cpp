@@ -4,6 +4,8 @@
 #include <windows.h>
 #include "Window.h"
 #include <DirectXMath.h> 
+#include "AssetPath.h"
+#include <algorithm>
 using namespace DirectX;
 
 namespace CrashOut
@@ -26,8 +28,8 @@ namespace CrashOut
         //myRenderer.CreateDepthStencilState();
 
         myShader = myResourceManager.LoadShader(
-            L"../../CrashOut/Shaders/Vertex.hlsl",
-            L"../../CrashOut/Shaders/Pixel.hlsl"
+            AssetPath(L"Shaders/Vertex.hlsl"),
+            AssetPath(L"Shaders/Pixel.hlsl")
         );
 
 
@@ -39,15 +41,11 @@ namespace CrashOut
         );
 
         myRegistry.SetOnRemove<TransformComponent>(
-            [this](Entity entity, TransformComponent& transform)
+            [this](Entity entity, TransformComponent&)
             {
-                auto* collider =
-                    myRegistry.GetComponent<BoxColliderComponent>(entity);
-
-                if (collider)
-                {
-                    myPhysics.DestroyBoxCollider(*collider);
-                }
+                myRegistry.RemoveComponent<BoxColliderComponent>(
+                    entity
+                );
             }
         );
     }
@@ -76,25 +74,44 @@ namespace CrashOut
     }
 
 
+
     void Application::Update(float deltaTime)
     {
         constexpr float maxDeltaTime = 0.25f;
-
-        deltaTime = (deltaTime > maxDeltaTime)
-            ? maxDeltaTime
-            : deltaTime;
-
-        OnUpdate(deltaTime);
-
         constexpr float fixedTimeStep = 1.0f / 60.0f;
 
+        // Prevent large simulation jumps.
+        deltaTime = std::clamp(
+            deltaTime,
+            0.0f,
+            maxDeltaTime
+        );
+
+        // Initialize any new physics bodies.
+        myPhysics.EnsureBodies(myRegistry);
+
+        // Variable-time frame logic.
+        OnUpdate(deltaTime);
+
+        // Accumulate time for fixed updates.
         myPhysicsAccumulator += deltaTime;
 
         while (myPhysicsAccumulator >= fixedTimeStep)
         {
-            myPhysics.UpdateTransforms(myRegistry, fixedTimeStep);
+            // Include entities created during gameplay.
+            myPhysics.EnsureBodies(myRegistry);
 
-            auto events = myPhysics.GetCollisionEvents();
+            // Physics-related gameplay logic.
+            OnFixedUpdate(fixedTimeStep);
+
+            // Run the Box3D simulation.
+            myPhysics.UpdateTransforms(
+                myRegistry,
+                fixedTimeStep
+            );
+
+            // Deliver physics events.
+            const auto& events = myPhysics.GetCollisionEvents();
 
             for (const auto& event : events)
             {
@@ -104,6 +121,7 @@ namespace CrashOut
             myPhysicsAccumulator -= fixedTimeStep;
         }
     }
+
 
 
 
@@ -139,6 +157,11 @@ namespace CrashOut
     void Application::DestroyEntity(Entity entity)
     {
         myRegistry.DestroyEntity(entity);
+    }
+
+    void Application::InitializePhysics()
+    {
+        myPhysics.EnsureBodies(myRegistry);
     }
 }
 

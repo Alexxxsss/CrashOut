@@ -15,3 +15,17 @@ set_target_properties(Sandbox PROPERTIES
     VS_DEBUGGER_COMMAND "${CMAKE_SOURCE_DIR}/bin/$<CONFIG>/Sandbox.exe"
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/$<CONFIG>"
 )
+
+# Copy game assets next to Sandbox.exe
+add_custom_command(TARGET Sandbox POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/Assets"
+        "$<TARGET_FILE_DIR:Sandbox>/Assets"
+
+    # Copy engine shaders
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${PROJECT_SOURCE_DIR}/CrashOut/Shaders"
+        "$<TARGET_FILE_DIR:Sandbox>/Shaders"
+
+    VERBATIM
+)

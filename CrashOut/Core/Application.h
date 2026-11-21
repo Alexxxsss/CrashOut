@@ -25,6 +25,7 @@ namespace CrashOut
         void RenderFrame();
         void CleanUp();
 
+        void InitializePhysics();
 
         void DestroyEntity(Entity entity);
 
@@ -43,6 +44,7 @@ namespace CrashOut
 
         virtual void OnStart() = 0;
         virtual void OnUpdate(float deltaTime) = 0;
+        virtual void OnFixedUpdate(float fixedDeltaTime) {}
         virtual void OnRender() = 0;
         virtual void OnShutdown() = 0;
         virtual void OnCollision(const CollisionEvent& event) {}

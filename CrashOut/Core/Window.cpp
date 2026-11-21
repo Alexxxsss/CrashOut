@@ -67,7 +67,16 @@ LRESULT Window::HandleMessage(
 
         PostQuitMessage(0);
         return 0;
+    case WM_KILLFOCUS:
+    {
+        if (myInputHandler)
+        {
+            myInputHandler->ClearInput();
+            myInputHandler->ReleaseMouse();
+        }
 
+        return 0;
+    }
     default:
         return DefWindowProcW(
             hwnd, uMsg, wParam, lParam
@@ -116,21 +125,26 @@ bool Window::StartUpWindow(int width, int height, const wchar_t* title)
     return true;
 }
 
+
 bool Window::UpdateOpenWindow()
 {
-    if (myInputHandler != nullptr)
-    {
-        myInputHandler->UpdateInput();
-    }
     MSG msg = {};
+
     while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
     {
         if (msg.message == WM_QUIT)
         {
-            return false; // Signal that the application should exit
+            return false;
         }
+
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+
+    if (myInputHandler != nullptr)
+    {
+        myInputHandler->UpdateInput();
+    }
+
     return true;
 }
