@@ -1,11 +1,16 @@
+file(GLOB_RECURSE SANDBOX_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/Src/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Src/*.h"
+)
+
 add_executable(Sandbox 
-    Src/Game.cpp
-    Src/Game.h
+    ${SANDBOX_SOURCES}
 )
 
 target_link_libraries(Sandbox PRIVATE CrashOut)
 
 target_include_directories(Sandbox PRIVATE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../CrashOut
 )
 

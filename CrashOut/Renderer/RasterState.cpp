@@ -32,20 +32,24 @@ void RasterState::Use()
 void RasterState::CreateRasterStateSolid()
 {
     D3D11_RASTERIZER_DESC rasterizerState = {};
+
     rasterizerState.FillMode = D3D11_FILL_SOLID;
-    rasterizerState.CullMode = D3D11_CULL_BACK;         // Cull backfaces in solid mode
-    rasterizerState.FrontCounterClockwise = true;       // Match winding order with wireframe
+    rasterizerState.CullMode = D3D11_CULL_BACK;
+
+    rasterizerState.FrontCounterClockwise = false;
+
     rasterizerState.DepthClipEnable = true;
     rasterizerState.MultisampleEnable = true;
     rasterizerState.AntialiasedLineEnable = false;
 
-    rasterizerState.DepthBias = 0;
-    rasterizerState.DepthBiasClamp = 0.0f;
-    rasterizerState.SlopeScaledDepthBias = 0.0f;
-
     ID3D11Device* device = myRenderer->GetDevice();
-    DX::Check(device->CreateRasterizerState(&rasterizerState, myRasterStateSolid.ReleaseAndGetAddressOf()));
+
+    DX::Check(device->CreateRasterizerState(
+        &rasterizerState,
+        myRasterStateSolid.ReleaseAndGetAddressOf()
+    ));
 }
+
 
 void RasterState::CreateRasterStateWireframe()
 {
