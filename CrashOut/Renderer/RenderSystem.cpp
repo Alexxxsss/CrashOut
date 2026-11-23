@@ -4,6 +4,8 @@
 #include "Shader.h"
 #include "Model.h"
 #include "Material.h"
+#include "LightingSystem.h"
+#include "ShadowSystem.h"
 
 #include "../Ecs/Registry.h"
 #include "../Ecs/Components.h"
@@ -16,7 +18,9 @@ void RenderSystem::Render(
     Registry& aRegistry,
     Camera& aCamera,
     Shader& aShader,
-    Material& aDefaultMaterial)
+    Material& aDefaultMaterial,
+    LightingSystem& aLightingSystem,
+    ShadowSystem& aShadowSystem)
 {
     XMMATRIX view = aCamera.GetView();
     XMMATRIX projection = aCamera.GetProjection();
@@ -28,7 +32,11 @@ void RenderSystem::Render(
     if (!meshPool)
         return;
 
-    aShader.Use();
+    aShadowSystem.RenderDepth(aRegistry); // First pass: write sun depth map.
+
+    aShader.Use(); // Restore normal main-pass VS, PS, and input layout.
+    aLightingSystem.UpdateAndBind(aRegistry); // PS b1: colors/intensity.
+    aShadowSystem.BindForLighting();          // PS b2/t1/s1: sun shadows.
 
     for (auto& [entity, mesh] : meshPool->data)
     {
@@ -44,7 +52,7 @@ void RenderSystem::Render(
         XMMATRIX world = transform->GetWorldMatrix();
         XMMATRIX mvp = world * viewProjection;
 
-        aShader.UpdateModelViewProjectionBuffer(mvp);
+        aShader.UpdateObjectBuffer(world, mvp);
 
         auto* material =
             aRegistry.GetComponent<MaterialComponent>(entity);

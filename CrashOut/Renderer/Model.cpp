@@ -8,6 +8,8 @@
 #include <filesystem>
 #include <stdexcept>
 #include <algorithm>
+#include <tuple>
+#include <cmath>
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "../External/tiny_obj_loader.h"
@@ -63,16 +65,19 @@ void Model::Create(const std::string& path)
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
 
-    // Maps OBJ position and UV indices to our vertex index.
-    std::map<std::pair<int, int>, uint32_t> uniqueVertices;
+    // Separate vertices by position, UV AND normal index.
+    // A cube needs multiple normals at the same position (sharp edges).
+    std::map<std::tuple<int, int, int>, uint32_t> uniqueVertices;
+    std::vector<bool> missingNormals;
 
     for (const auto& shape : shapes)
     {
         for (const auto& index : shape.mesh.indices)
         {
-            auto key = std::make_pair(
+            auto key = std::make_tuple(
                 index.vertex_index,
-                index.texcoord_index
+                index.texcoord_index,
+                index.normal_index
             );
 
             auto it = uniqueVertices.find(key);
@@ -119,10 +124,28 @@ void Model::Create(const std::string& path)
                 v = 1.0f - attrib.texcoords[uvIndex + 1];
             }
 
+            float nx = 0.0f;
+            float ny = 0.0f;
+            float nz = 0.0f;
+            const bool missingNormal = index.normal_index < 0;
+
+            if (!missingNormal)
+            {
+                if (static_cast<size_t>(index.normal_index) >=
+                    attrib.normals.size() / 3)
+                    throw std::runtime_error("Invalid normal index: " + path);
+
+                size_t n = 3 * static_cast<size_t>(index.normal_index);
+                nx = attrib.normals[n + 0];
+                ny = attrib.normals[n + 1];
+                nz = attrib.normals[n + 2];
+            }
+
             Vertex vertex =
             {
                 VertexPosition(x, y, -z),
-                VertexTextureUV(u, v)
+                VertexTextureUV(u, v),
+                VertexNormal(nx, ny, -nz)
             };
 
             uint32_t newIndex =
@@ -131,6 +154,7 @@ void Model::Create(const std::string& path)
             uniqueVertices.emplace(key, newIndex);
 
             vertices.push_back(vertex);
+            missingNormals.push_back(missingNormal);
             indices.push_back(newIndex);
         }
     }
@@ -142,9 +166,45 @@ void Model::Create(const std::string& path)
 
     for (size_t i = 0; i + 2 < indices.size(); i += 3)
     {
+        // Mirroring Z changes winding, so fix it before computing normals.
         std::swap(indices[i + 1], indices[i + 2]);
+
+        const auto& a = vertices[indices[i + 0]].position;
+        const auto& b = vertices[indices[i + 1]].position;
+        const auto& c = vertices[indices[i + 2]].position;
+
+        const float abx = b.x - a.x, aby = b.y - a.y, abz = b.z - a.z;
+        const float acx = c.x - a.x, acy = c.y - a.y, acz = c.z - a.z;
+        const float nx = aby * acz - abz * acy;
+        const float ny = abz * acx - abx * acz;
+        const float nz = abx * acy - aby * acx;
+
+        for (size_t j = 0; j < 3; ++j)
+        {
+            const uint32_t vertexIndex = indices[i + j];
+            if (!missingNormals[vertexIndex])
+                continue;
+            auto& n = vertices[vertexIndex].normal;
+            n.x += nx; n.y += ny; n.z += nz;
+        }
     }
 
+    // If an OBJ has no normals, compute smooth normals from its triangles.
+    for (size_t i = 0; i < vertices.size(); ++i)
+    {
+        if (!missingNormals[i])
+            continue;
+        auto& n = vertices[i].normal;
+        const float length = std::sqrt(n.x * n.x + n.y * n.y + n.z * n.z);
+        if (length > 0.00001f)
+        {
+            n.x /= length; n.y /= length; n.z /= length;
+        }
+        else
+        {
+            n.x = 0.0f; n.y = 1.0f; n.z = 0.0f;
+        }
+    }
 
     CreateVertexBuffer(vertices);
     CreateIndexBuffer(indices);

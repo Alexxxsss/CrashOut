@@ -17,12 +17,16 @@ namespace CrashOut
         {
             throw std::runtime_error("Window initialization failed");
         }
-        
+
         if (!myRenderer.Initialize(GetWindowHandle(), GetWindowWidth(), GetWindowHeight()))
         {
             throw std::runtime_error("Renderer initialization failed");
         }
         myRasterState.Init(&myRenderer);
+        myLightingSystem.Init(myRenderer);
+        myShadowSystem.Init(myRenderer);
+        myShadowSystem.SetFocus({ 0.0f, 0.0f, 0.0f });
+        myShadowSystem.SetCoverage(90.0f, 90.0f);
 
         //myRenderer.CreateDepthBuffer(GetWindowWidth(), GetWindowHeight());
         //myRenderer.CreateDepthStencilState();

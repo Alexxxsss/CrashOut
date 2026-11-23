@@ -8,6 +8,8 @@
 #include "../Renderer/RenderSystem.h"
 #include "../Resources/ResourceManager.h"
 #include "../Renderer/Shader.h"
+#include "../Renderer/LightingSystem.h"
+#include "../Renderer/ShadowSystem.h"
 
 namespace CrashOut
 {
@@ -30,7 +32,7 @@ namespace CrashOut
         void DestroyEntity(Entity entity);
 
         HWND GetWindowHandle() const { return myWindow.GetHwnd(); }
-        UINT GetWindowWidth() const{ return myWindow.GetWidth(); }
+        UINT GetWindowWidth() const { return myWindow.GetWidth(); }
 
         UINT GetWindowHeight() const { return myWindow.GetHeight(); }
         Renderer& GetRenderer() { return myRenderer; }
@@ -62,6 +64,8 @@ namespace CrashOut
         std::shared_ptr<Shader> myShader;
         RasterState myRasterState;
         RenderSystem myRenderSystem;
+        LightingSystem myLightingSystem;
+        ShadowSystem myShadowSystem;
 
         PhysicsSystem myPhysics;
 

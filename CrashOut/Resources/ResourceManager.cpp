@@ -122,7 +122,7 @@ std::shared_ptr<Shader> ResourceManager::LoadShader(
     shader->LoadVertexShader(key.first);
     shader->LoadPixelShader(key.second);
 
-    shader->CreateWorldViewProjectionConstantBuffer();
+    shader->CreateObjectConstantBuffer();
 
     myShaders.emplace(key, shader);
 

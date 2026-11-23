@@ -134,6 +134,15 @@ void Shader::LoadVertexShader(const std::filesystem::path& aPath)
             12,
             D3D11_INPUT_PER_VERTEX_DATA,
             0
+        },
+        {
+            "NORMAL",
+            0,
+            DXGI_FORMAT_R32G32B32_FLOAT,
+            0,
+            20, // position (12 bytes) + UV (8 bytes)
+            D3D11_INPUT_PER_VERTEX_DATA,
+            0
         }
     };
 
@@ -177,7 +186,7 @@ void Shader::LoadPixelShader(const std::filesystem::path& aPath)
 
 
 
-void Shader::CreateWorldViewProjectionConstantBuffer()
+void Shader::CreateObjectConstantBuffer()
 {
     ID3D11Device* device =
         myRenderer->GetDevice();
@@ -185,14 +194,14 @@ void Shader::CreateWorldViewProjectionConstantBuffer()
     D3D11_BUFFER_DESC bd = {};
 
     bd.Usage = D3D11_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof(ModelViewProjectionBuffer);
+    bd.ByteWidth = sizeof(ObjectConstantBuffer);
     bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 
     DX::Check(
         device->CreateBuffer(
             &bd,
             nullptr,
-            myModelViewProjectionConstantBuffer
+            myObjectConstantBuffer
             .ReleaseAndGetAddressOf()
         ),
         "Failed to create MVP constant buffer"
@@ -200,13 +209,21 @@ void Shader::CreateWorldViewProjectionConstantBuffer()
 }
 
 
-void Shader::UpdateModelViewProjectionBuffer(DirectX::XMMATRIX matrix)
+void Shader::UpdateObjectBuffer(DirectX::XMMATRIX world,
+    DirectX::XMMATRIX modelViewProjection)
 {
-    ModelViewProjectionBuffer buffer = {};
-    buffer.modelViewProjection = DirectX::XMMatrixTranspose(matrix);
+    ObjectConstantBuffer buffer = {};
+    buffer.modelViewProjection = DirectX::XMMatrixTranspose(modelViewProjection);
+    buffer.world = DirectX::XMMatrixTranspose(world);
 
-    ID3D11DeviceContext* context = myRenderer->GetContext();
-    context->UpdateSubresource(myModelViewProjectionConstantBuffer.Get(), 0, nullptr, &buffer, 0, 0);
+    // Inverse-transpose is needed for correct normals on non-uniformly
+    // scaled objects (your floor is one such object).
+    const DirectX::XMMATRIX normalMatrix =
+        DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(nullptr, world));
+    buffer.worldInverseTranspose = DirectX::XMMatrixTranspose(normalMatrix);
+
+    myRenderer->GetContext()->UpdateSubresource(
+        myObjectConstantBuffer.Get(), 0, nullptr, &buffer, 0, 0);
 }
 
 
@@ -237,7 +254,7 @@ void Shader::Use()
     context->VSSetConstantBuffers(
         0,
         1,
-        myModelViewProjectionConstantBuffer
+        myObjectConstantBuffer
         .GetAddressOf()
     );
 }

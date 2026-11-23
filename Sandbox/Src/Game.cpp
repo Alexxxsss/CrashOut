@@ -24,6 +24,9 @@ class SandboxApp : public CrashOut::Application
     Entity entity1;
     Entity entity2;
     Entity floor;
+    Entity sunLight;
+    Entity pointLight;
+    Entity spotLight;
     TransformComponent* t1 = nullptr;
     TransformComponent* t2 = nullptr;
     TransformComponent* t3 = nullptr;
@@ -49,7 +52,7 @@ public:
         monkeyModel = resources.LoadModel(CrashOut::AssetPath(L"Assets/Models/Basic.obj").string());
 
         auto defaultTexture = resources.LoadTexture(CrashOut::AssetPath(L"Assets/Textures/PrototypeTexture.png").wstring());
-        auto brickTexture = resources.LoadTexture(CrashOut::AssetPath(L"Assets/Textures/Brick.png").wstring());
+        auto brickTexture = resources.LoadTexture(CrashOut::AssetPath(L"Assets/Textures/brick.png").wstring());
 
         defaultMaterial = resources.CreateMaterial("DefaultMaterial", defaultTexture);
         brickMaterial = resources.CreateMaterial("BrickMaterial", brickTexture);
@@ -88,13 +91,13 @@ public:
         floorCollider.isStatic = true;
 
 
-        for (int i = 0; i < 20; i+=2)
+        for (int i = 0; i < 20; i += 2)
         {
-            for (int y = 0; y < 20; y+=2)
+            for (int y = 0; y < 20; y += 2)
             {
                 Entity entity3 = myRegistry.CreateEntity();
                 t2 = &myRegistry.AddComponent<TransformComponent>(entity3);
-                t2->position = { 4.f + i, 0.5f, 5.0f+ y };
+                t2->position = { 4.f + i, 0.5f, 5.0f + y };
                 t2->scale = { 0.6f, 0.6f, 0.6f };
                 myRegistry.AddComponent<MeshComponent>(entity3, cubeModel);
                 myRegistry.AddComponent<MaterialComponent>(entity3, brickMaterial);
@@ -102,6 +105,37 @@ public:
                 entity3Collider.halfExtents = { 1.f, 1.f, 1.1f };
             }
         }
+
+        // --- ECS lights ---
+        myLightingSystem.SetAmbient({ 1.0f, 1.0f, 1.0f }, 0.12f);
+
+        // Sun: no Transform needed; direction is world space.
+        sunLight = myRegistry.CreateEntity();
+        auto& sun = myRegistry.AddComponent<DirectionalLightComponent>(sunLight);
+        sun.direction = { -0.4f, -1.0f, 0.3f };
+        sun.color = { 1.0f, 0.95f, 0.8f };
+        sun.intensity = 0.65f;
+
+        // Orange lamp: uses entity Transform.position.
+        pointLight = myRegistry.CreateEntity();
+        auto& pointTransform = myRegistry.AddComponent<TransformComponent>(pointLight);
+        pointTransform.position = { 0.0f, 2.5f, 4.0f };
+        auto& point = myRegistry.AddComponent<PointLightComponent>(pointLight);
+        point.color = { 1.0f, 0.35f, 0.15f };
+        point.intensity = 3.0f;
+        point.range = 9.0f;
+
+        // Blue spotlight pointing from above toward the cubes.
+        spotLight = myRegistry.CreateEntity();
+        auto& spotTransform = myRegistry.AddComponent<TransformComponent>(spotLight);
+        spotTransform.position = { 0.0f, 4.0f, 2.0f };
+        auto& spot = myRegistry.AddComponent<SpotLightComponent>(spotLight);
+        spot.direction = { 0.0f, -1.0f, 0.5f }; // Local direction.
+        spot.color = { 0.2f, 0.45f, 1.0f };
+        spot.intensity = 4.0f;
+        spot.range = 12.0f;
+        spot.innerAngleDegrees = 18.0f;
+        spot.outerAngleDegrees = 32.0f;
 
         std::cout << "Model references: "
             << cubeModel.use_count()
@@ -214,12 +248,14 @@ public:
         /// FUNKAR INTE
         /// Måste fixa
         ///
-        
+
         myRenderSystem.Render(
             myRegistry,
             camera,
             GetShader(),
-            *defaultMaterial
+            *defaultMaterial,
+            myLightingSystem,
+            myShadowSystem
         );
         myGizmoSystem.RenderColliders(
             myRegistry,
@@ -232,30 +268,30 @@ public:
     {
         switch (event.type)
         {
-            case CollisionEventType::Begin:
+        case CollisionEventType::Begin:
+        {
+            if (event.entityA == entity1 || event.entityB == entity1)
             {
-                if (event.entityA == entity1 || event.entityB == entity1)
-                {
-                    std::cout << "Player Enter Collider!\n";
-                }
-                break;
+                std::cout << "Player Enter Collider!\n";
             }
-            case CollisionEventType::End:
+            break;
+        }
+        case CollisionEventType::End:
+        {
+            if (event.entityA == entity1 || event.entityB == entity1)
             {
-                if (event.entityA == entity1 || event.entityB == entity1)
-                {
-                    std::cout << "Player Exit Collider!\n";
-                }
-                break;
+                std::cout << "Player Exit Collider!\n";
             }
-            case CollisionEventType::TriggerEnter:
-            {
-                break;
-            }
-            case CollisionEventType::TriggerExit:
-            {
-                break;
-            }
+            break;
+        }
+        case CollisionEventType::TriggerEnter:
+        {
+            break;
+        }
+        case CollisionEventType::TriggerExit:
+        {
+            break;
+        }
         }
     }
 

@@ -4,6 +4,8 @@ class Registry;
 class Camera;
 class Shader;
 class Material;
+class LightingSystem;
+class ShadowSystem;
 
 class RenderSystem
 {
@@ -15,6 +17,8 @@ public:
         Registry& aRegistry,
         Camera& aCamera,
         Shader& aShader,
-        Material& aDefaultMaterial
+        Material& aDefaultMaterial,
+        LightingSystem& aLightingSystem,
+        ShadowSystem& aShadowSystem
     );
 };

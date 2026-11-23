@@ -9,6 +9,8 @@
 #include "../Renderer/TextureSampler.h"
 #include "../Renderer/Material.h"
 #include "../Renderer/RenderSystem.h"
+#include "../Renderer/LightingSystem.h"
+#include "../Renderer/ShadowSystem.h"
 #include "../Input/InputSystem.h"
 #include "../External/Timer.h"
 
