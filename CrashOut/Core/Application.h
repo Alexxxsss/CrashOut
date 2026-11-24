@@ -3,13 +3,16 @@
 #include <iostream>
 #include <windows.h>
 #include "Window.h"
-#include "Engine.h"
+#include "../Renderer/Renderer.h"
+#include "../Renderer/RasterState.h"
+#include "../Renderer/Camera.h"
 #include <memory>
 #include "../Renderer/RenderSystem.h"
 #include "../Resources/ResourceManager.h"
 #include "../Renderer/Shader.h"
 #include "../Renderer/LightingSystem.h"
 #include "../Renderer/ShadowSystem.h"
+#include "../Scene/Scene.h"
 
 namespace CrashOut
 {
@@ -27,7 +30,15 @@ namespace CrashOut
         void RenderFrame();
         void CleanUp();
 
-        void InitializePhysics();
+        // Call scene replacement / Play / Stop at a frame boundary,
+        // e.g. OnStart or OnUpdate, not OnFixedUpdate/OnCollision/OnRender.
+        Scene& GetScene();
+        Scene& GetEditScene() { return *myEditScene; }
+        void SetScene(std::unique_ptr<Scene> scene);
+        void StartPlay();
+        void StopPlay();
+        bool IsPlaying() const { return bool(myRuntimeScene); }
+        void RenderScene(Camera& camera, Material& defaultMaterial);
 
         void DestroyEntity(Entity entity);
 
@@ -67,9 +78,9 @@ namespace CrashOut
         LightingSystem myLightingSystem;
         ShadowSystem myShadowSystem;
 
-        PhysicsSystem myPhysics;
-
-        Registry myRegistry;
+    private:
+        std::unique_ptr<Scene> myEditScene;
+        std::unique_ptr<Scene> myRuntimeScene;
 
         float myPhysicsAccumulator = 0.0f;
     };

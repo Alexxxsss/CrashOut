@@ -9,6 +9,8 @@
 #include <stdexcept>
 #include <utility>
 #include <functional>
+#include <limits>
+#include <algorithm>
 
 using Entity = uint32_t;
 
@@ -57,11 +59,25 @@ public:
 
     Entity CreateEntity()
     {
-        Entity entity = m_NextEntityId++;
+        if (m_NextEntityId > (std::numeric_limits<Entity>::max)())
+            throw std::overflow_error("Entity ID space exhausted");
+        return CreateEntity(static_cast<Entity>(m_NextEntityId));
+    }
 
-        m_AliveEntities.insert(entity);
+    Entity CreateEntity(Entity id)
+    {
+        if (id == 0 || !m_AliveEntities.insert(id).second)
+            throw std::runtime_error("Invalid or duplicate entity ID");
+        m_NextEntityId = (std::max)(m_NextEntityId,
+            static_cast<uint64_t>(id) + 1);
+        return id;
+    }
 
-        return entity;
+    std::vector<Entity> GetEntities() const
+    {
+        std::vector<Entity> entities(m_AliveEntities.begin(), m_AliveEntities.end());
+        std::sort(entities.begin(), entities.end());
+        return entities;
     }
 
     bool HasEntity(Entity entity) const
@@ -132,11 +148,19 @@ public:
     }
 
     template<typename T>
-    bool HasComponent(Entity entity)
+    const T* GetComponent(Entity entity) const
     {
+        if (!HasEntity(entity)) return nullptr;
         auto* pool = GetPool<T>();
+        if (!pool) return nullptr;
+        auto it = pool->data.find(entity);
+        return it == pool->data.end() ? nullptr : &it->second;
+    }
 
-        return pool && pool->data.find(entity) != pool->data.end();
+    template<typename T>
+    bool HasComponent(Entity entity) const
+    {
+        return GetComponent<T>(entity) != nullptr;
     }
 
     template<typename T>
@@ -178,6 +202,14 @@ public:
     }
 
     template<typename T>
+    const ComponentPool<T>* GetPool() const
+    {
+        auto it = m_Pools.find(std::type_index(typeid(T)));
+        return it == m_Pools.end() ? nullptr :
+            static_cast<const ComponentPool<T>*>(it->second.get());
+    }
+
+    template<typename T>
     void SetOnRemove(std::function<void(Entity, T&)> callback)
     {
         auto* pool = GetOrCreatePool<T>();
@@ -196,7 +228,7 @@ public:
     }
 
 private:
-    Entity m_NextEntityId = 1;
+    uint64_t m_NextEntityId = 1;
     std::unordered_set<Entity> m_AliveEntities;
 
     std::unordered_map<std::type_index, std::shared_ptr<IComponentPool>> m_Pools;

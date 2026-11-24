@@ -27,6 +27,11 @@ add_custom_command(TARGET Sandbox POST_BUILD
         "${CMAKE_CURRENT_SOURCE_DIR}/Assets"
         "$<TARGET_FILE_DIR:Sandbox>/Assets"
 
+    # Copy the sample authored scene (not live editor saves).
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/Scenes"
+        "$<TARGET_FILE_DIR:Sandbox>/Scenes"
+
     # Copy engine shaders
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${PROJECT_SOURCE_DIR}/CrashOut/Shaders"

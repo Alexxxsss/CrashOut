@@ -23,7 +23,6 @@ int main(int argc, char* argv[])
             return EXIT_FAILURE;
 
         app->OnStart();
-        app->InitializePhysics();
 
         bool isRunning = true;
 

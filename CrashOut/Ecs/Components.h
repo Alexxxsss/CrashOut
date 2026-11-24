@@ -3,14 +3,27 @@
 #include <d3d11.h>
 #include <box3d/box3d.h>
 #include <memory>
+#include <string>
 
 class Material;
 class Model;
 
+struct NameComponent
+{
+    std::string name = "Entity";
+};
+
+struct CameraComponent
+{
+    float fov = 50.0f; 
+    float nearPlane = 0.01f;
+    float farPlane = 100.0f;
+    bool primary = false;
+};
+
 struct TransformComponent
 {
     DirectX::XMFLOAT3 position = { 0.0f, 0.0f, 0.0f };
-    // Quaternion (x, y, z, w) - matches Box3D natively
     DirectX::XMFLOAT4 rotation = { 0.0f, 0.0f, 0.0f, 1.0f };
     DirectX::XMFLOAT3 scale = { 1.0f, 1.0f, 1.0f };
 
@@ -27,26 +40,25 @@ struct TransformComponent
 struct MeshComponent
 {
     std::shared_ptr<Model> model = nullptr;
-    bool castShadows = true; // Set false for decorations that should not cast shadows.
+    bool castShadows = true; 
+    std::string assetPath; 
 };
 
 struct MaterialComponent
 {
     std::shared_ptr<Material> material = nullptr;
+    std::string texturePath;
 };
 
-// Direction points in the direction the light rays travel (world space).
-// Example: { 0, -1, 0 } shines straight down.
 struct DirectionalLightComponent
 {
     DirectX::XMFLOAT3 direction = { -0.4f, -1.0f, 0.3f };
     DirectX::XMFLOAT3 color = { 1.0f, 1.0f, 1.0f };
     float intensity = 1.0f;
     bool enabled = true;
-    bool castsShadows = true; // Currently one directional shadow map.
+    bool castsShadows = true; 
 };
 
-// A point light uses its entity's TransformComponent.position.
 struct PointLightComponent
 {
     DirectX::XMFLOAT3 color = { 1.0f, 1.0f, 1.0f };
@@ -55,16 +67,14 @@ struct PointLightComponent
     bool enabled = true;
 };
 
-// A spotlight uses TransformComponent.position and rotation.
-// direction is expressed in local space, then rotated by the Transform.
 struct SpotLightComponent
 {
     DirectX::XMFLOAT3 direction = { 0.0f, -1.0f, 0.0f };
     DirectX::XMFLOAT3 color = { 1.0f, 1.0f, 1.0f };
     float intensity = 3.0f;
     float range = 12.0f;
-    float innerAngleDegrees = 18.0f; // Half-angle: fully lit inside
-    float outerAngleDegrees = 30.0f; // Half-angle: light ends outside
+    float innerAngleDegrees = 18.0f; 
+    float outerAngleDegrees = 30.0f; 
     bool enabled = true;
 };
 
@@ -73,7 +83,7 @@ struct BoxColliderComponent
     DirectX::XMFLOAT3 halfExtents = { 0.5f, 0.5f, 0.5f };
     DirectX::XMFLOAT3 localOffset = { 0.0f, 0.0f, 0.0f };
 
-    bool isStatic = false; // true = immovable (floors/walls), false = dynamic
+    bool isStatic = false; 
     float friction = 0.3f;
     float restitution = 0.2f;
     float density = 1.0f;

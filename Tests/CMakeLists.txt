@@ -1,8 +1,8 @@
-#add_executable(CrashOutEcsTests EcsTests.cpp)
-#target_include_directories(CrashOutEcsTests PRIVATE "${PROJECT_SOURCE_DIR}/CrashOut")
+add_executable(CrashOutEcsTests EcsTests.cpp)
+target_include_directories(CrashOutEcsTests PRIVATE "${PROJECT_SOURCE_DIR}/CrashOut")
 
-#add_executable(CrashOutPhysicsTests PhysicsTests.cpp)
-#target_link_libraries(CrashOutPhysicsTests PRIVATE CrashOut)
+add_executable(CrashOutPhysicsTests PhysicsTests.cpp)
+target_link_libraries(CrashOutPhysicsTests PRIVATE CrashOut)
 
 add_test(NAME ECS.CreateDestroy   COMMAND CrashOutEcsTests entities)
 add_test(NAME ECS.Components      COMMAND CrashOutEcsTests components)
@@ -16,3 +16,8 @@ set_tests_properties(
     Physics.DestroyEntity Physics.RemoveComponents Physics.StressCreateDestroy
     PROPERTIES TIMEOUT 30
 )
+
+add_executable(CrashOutSceneTests SceneTests.cpp)
+target_link_libraries(CrashOutSceneTests PRIVATE CrashOut)
+add_test(NAME Scene.RoundTripAndPlay COMMAND CrashOutSceneTests)
+set_tests_properties(Scene.RoundTripAndPlay PROPERTIES TIMEOUT 30)

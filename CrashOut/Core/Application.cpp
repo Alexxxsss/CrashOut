@@ -5,6 +5,7 @@
 #include "Window.h"
 #include <DirectXMath.h> 
 #include "AssetPath.h"
+#include "../Scene/SceneSerializer.h"
 #include <algorithm>
 using namespace DirectX;
 
@@ -37,21 +38,7 @@ namespace CrashOut
         );
 
 
-        myRegistry.SetOnRemove<BoxColliderComponent>(
-            [this](Entity entity, BoxColliderComponent& collider)
-            {
-                myPhysics.DestroyBoxCollider(collider);
-            }
-        );
-
-        myRegistry.SetOnRemove<TransformComponent>(
-            [this](Entity entity, TransformComponent&)
-            {
-                myRegistry.RemoveComponent<BoxColliderComponent>(
-                    entity
-                );
-            }
-        );
+        myEditScene = std::make_unique<Scene>();
     }
 
 
@@ -91,37 +78,22 @@ namespace CrashOut
             maxDeltaTime
         );
 
-        // Initialize any new physics bodies.
-        myPhysics.EnsureBodies(myRegistry);
-
-        // Variable-time frame logic.
+        // Editor UI and variable-time gameplay both use this hook.
         OnUpdate(deltaTime);
+        if (!IsPlaying()) return;
 
-        // Accumulate time for fixed updates.
+        auto& scene = GetScene();
+        auto& registry = scene.GetRegistry();
+        auto& physics = scene.GetPhysics();
+        physics.EnsureBodies(registry);
         myPhysicsAccumulator += deltaTime;
-
         while (myPhysicsAccumulator >= fixedTimeStep)
         {
-            // Include entities created during gameplay.
-            myPhysics.EnsureBodies(myRegistry);
-
-            // Physics-related gameplay logic.
+            physics.EnsureBodies(registry);
             OnFixedUpdate(fixedTimeStep);
-
-            // Run the Box3D simulation.
-            myPhysics.UpdateTransforms(
-                myRegistry,
-                fixedTimeStep
-            );
-
-            // Deliver physics events.
-            const auto& events = myPhysics.GetCollisionEvents();
-
-            for (const auto& event : events)
-            {
+            physics.UpdateTransforms(registry, fixedTimeStep);
+            for (const auto& event : physics.GetCollisionEvents())
                 OnCollision(event);
-            }
-
             myPhysicsAccumulator -= fixedTimeStep;
         }
     }
@@ -155,17 +127,49 @@ namespace CrashOut
 
     void Application::CleanUp()
     {
+        myRuntimeScene.reset();
+        myEditScene.reset();
         myRenderer.CleanUp();
+    }
+
+    Scene& Application::GetScene()
+    {
+        return IsPlaying() ? *myRuntimeScene : *myEditScene;
+    }
+
+    void Application::SetScene(std::unique_ptr<Scene> scene)
+    {
+        if (IsPlaying() || !scene)
+            throw std::runtime_error("Stop Play before replacing the scene");
+        myEditScene = std::move(scene);
+        myPhysicsAccumulator = 0.0f;
+    }
+
+    void Application::StartPlay()
+    {
+        if (IsPlaying()) return;
+        auto runtime = SceneSerializer::Clone(*myEditScene, myResourceManager);
+        runtime->GetPhysics().EnsureBodies(runtime->GetRegistry());
+        myRuntimeScene = std::move(runtime);
+        myPhysicsAccumulator = 0.0f;
+    }
+
+    void Application::StopPlay()
+    {
+        myRuntimeScene.reset();
+        myPhysicsAccumulator = 0.0f;
+    }
+
+    void Application::RenderScene(Camera& camera, Material& defaultMaterial)
+    {
+        auto& scene = GetScene();
+        myLightingSystem.SetAmbient(scene.ambientColor, scene.ambientIntensity);
+        myRenderSystem.Render(scene.GetRegistry(), camera, GetShader(),
+            defaultMaterial, myLightingSystem, myShadowSystem);
     }
 
     void Application::DestroyEntity(Entity entity)
     {
-        myRegistry.DestroyEntity(entity);
-    }
-
-    void Application::InitializePhysics()
-    {
-        myPhysics.EnsureBodies(myRegistry);
+        GetScene().DestroyEntity(entity);
     }
 }
-

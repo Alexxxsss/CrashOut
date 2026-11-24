@@ -1,4 +1,3 @@
-
 file(GLOB_RECURSE CRASHOUT_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/*.h"
@@ -7,6 +6,7 @@ file(GLOB_RECURSE CRASHOUT_SOURCES CONFIGURE_DEPENDS
 # Exclude external libraries to prevent double compilation
 list(FILTER CRASHOUT_SOURCES EXCLUDE REGEX "/External/box3d-main/")
 list(FILTER CRASHOUT_SOURCES EXCLUDE REGEX "/External/DirectXTK/")
+list(FILTER CRASHOUT_SOURCES EXCLUDE REGEX "/External/nlohmann/")
 
 # Create engine library
 add_library(CrashOut STATIC ${CRASHOUT_SOURCES})
@@ -26,6 +26,7 @@ add_subdirectory(External/DirectXTK)
 # Include directories
 target_include_directories(CrashOut PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/External/nlohmann
 )
 
 # Link libraries

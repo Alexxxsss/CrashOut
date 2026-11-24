@@ -1,3 +1,4 @@
+#pragma once
 #include "Application.h"
 #include "Core/Window.h"
 
@@ -17,5 +18,7 @@
 #include "../Ecs/Registry.h"
 #include "../Ecs/Components.h"
 #include "../Physics/PhysicsSystem.h"
+#include "../Scene/Scene.h"
+#include "../Scene/SceneSerializer.h"
 
 #include <box3d/box3d.h>

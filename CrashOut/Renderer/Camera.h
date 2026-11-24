@@ -11,6 +11,11 @@ public:
 
 	void Init(int width, int height);
 
+    // Scene camera: quaternion rotation, +Z forward, +Y up.
+    void SetFromTransform(const DirectX::XMFLOAT3& position,
+        const DirectX::XMFLOAT4& rotation, float fov,
+        float nearPlane, float farPlane, int width, int height);
+
 	// Recalculates the view based on the pitch and yaw
 	void Rotate(float pitch, float yaw);
 
@@ -44,6 +49,8 @@ private:
 
 	// Aspect ratio
 	float myAspectRatio = 0.0f;
+    float myNearPlane = 0.01f;
+    float myFarPlane = 100.0f;
 
 	// Recalculates the projection based on the new window size
 	void CalculateProjection();

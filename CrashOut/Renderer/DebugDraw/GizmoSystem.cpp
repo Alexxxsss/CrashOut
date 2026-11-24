@@ -1,6 +1,7 @@
 
 #include "GizmoSystem.h"
 #include "DebugDraw.h"
+#include <cmath>
 #include "../Renderer.h"
 #include "../Camera.h"
 
@@ -101,58 +102,25 @@ void GizmoSystem::RenderColliders(
 
     for (auto& [entity, collider] : pool->data)
     {
-        if (!b3Body_IsValid(collider.bodyId))
-            continue;
+        auto* transform = registry.GetComponent<TransformComponent>(entity);
+        if (!transform) continue;
 
-        if (!b3Shape_IsValid(collider.shapeId))
-            continue;
-
-        if (b3Shape_GetType(collider.shapeId) != b3_hullShape)
-            continue;
-
-        const b3HullData* hull =
-            b3Shape_GetHull(collider.shapeId);
-
-        if (!hull)
-            continue;
-
-        const auto& min = hull->aabb.lowerBound;
-        const auto& max = hull->aabb.upperBound;
-
-        b3Vec3 localCenter = {
-            (min.x + max.x) * 0.5f,
-            (min.y + max.y) * 0.5f,
-            (min.z + max.z) * 0.5f
-        };
-
-        b3Pos center = b3Body_GetWorldPoint(
-            collider.bodyId,
-            localCenter
-        );
-
-        b3Quat rotation =
-            b3Body_GetRotation(collider.bodyId);
-
+        // Same scaled dimensions and offset as PhysicsSystem::CreateBoxCollider.
+        const auto& scale = transform->scale;
         BoundingOrientedBox box;
-
-        box.Center = {
-            static_cast<float>(center.x),
-            static_cast<float>(center.y),
-            static_cast<float>(center.z)
-        };
-
         box.Extents = {
-            (max.x - min.x) * 0.5f,
-            (max.y - min.y) * 0.5f,
-            (max.z - min.z) * 0.5f
+            std::abs(collider.halfExtents.x * scale.x),
+            std::abs(collider.halfExtents.y * scale.y),
+            std::abs(collider.halfExtents.z * scale.z)
         };
-
-        box.Orientation = {
-            rotation.v.x,
-            rotation.v.y,
-            rotation.v.z,
-            rotation.s
-        };
+        XMVECTOR q = XMLoadFloat4(&transform->rotation);
+        float lengthSq = XMVectorGetX(XMVector4LengthSq(q));
+        if (!std::isfinite(lengthSq) || lengthSq < 1e-8f) continue;
+        q = XMQuaternionNormalize(q);
+        XMVECTOR offset = XMVectorSet(collider.localOffset.x * scale.x,
+            collider.localOffset.y * scale.y, collider.localOffset.z * scale.z, 0);
+        XMStoreFloat3(&box.Center, XMVectorAdd(XMLoadFloat3(&transform->position), XMVector3Rotate(offset, q)));
+        XMStoreFloat4(&box.Orientation, q);
 
         XMVECTOR color = Colors::Lime;
 
