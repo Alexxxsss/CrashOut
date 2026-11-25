@@ -29,6 +29,8 @@ public:
     // Getters for when you start drawing triangles & shaders
     ID3D11Device* GetDevice() const { return m_device.Get(); }
     ID3D11DeviceContext* GetContext() const { return m_deviceContext.Get(); }
+    IDXGISwapChain* GetSwapChain() const { return m_swapChain.Get(); }
+    ID3D11RenderTargetView* GetRenderTargetView() const { return m_renderTargetView.Get(); }
 
     void CreateDepthBuffer(UINT width, UINT height);
     void CreateDepthStencilState();

@@ -14,6 +14,7 @@ include(CTest)
 # Pull in your subfolders
 add_subdirectory(CrashOut)
 add_subdirectory(Sandbox)
+add_subdirectory(Editor)
 
 if(BUILD_TESTING)
     add_subdirectory(Tests)
