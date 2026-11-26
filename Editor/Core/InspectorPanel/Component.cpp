@@ -9,6 +9,7 @@
 #include <CrashOut/Scene/SceneSerializer.h>
 #include <CrashOut/Core/AssetPath.h>
 #include <CrashOut/Scene/Scene.h>
+#include <tuple>
 
 
 Component::Component(std::string componentName)
@@ -37,6 +38,9 @@ void Component::Update(Entity& entityId)
 	ImGui::DragFloat3("Rotation", &vec02.x);
 	ImGui::DragFloat3("Scale", &vec03.x);
 
+
+
+
 	ImGui::PopID();
 	ImGui::PopID();
 
@@ -48,3 +52,4 @@ void Component::Update(Entity& entityId)
 
 	ImGui::End();
 }
+

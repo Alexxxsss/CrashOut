@@ -7,7 +7,7 @@
 #include <CrashOut/Scene/SceneSerializer.h>
 #include <CrashOut/Core/AssetPath.h>
 #include <CrashOut/Scene/Scene.h>
-
+#include "../InspectorPanel/Inspector.h"
 
 Hierarchy::Hierarchy()
 {
@@ -18,7 +18,7 @@ void Hierarchy::Init()
 {
 
 }
-void Hierarchy::Update(CrashOut::Scene& scene, Entity &selectedEntity)
+void Hierarchy::Update(CrashOut::Scene& scene, Entity &selectedEntity, Inspector& inspector)
 {
 	auto& registry = scene.GetRegistry();
 
@@ -36,6 +36,7 @@ void Hierarchy::Update(CrashOut::Scene& scene, Entity &selectedEntity)
 
 		if (ImGui::IsItemClicked())
 		{
+			inspector.LoadInspectorComponents(scene, selectedEntity);
 			selectedEntity = entity;
 		}
 

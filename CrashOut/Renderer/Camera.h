@@ -31,7 +31,11 @@ public:
 	// Get view matrix
 	inline DirectX::XMMATRIX GetView() const { return myView; }
 
+	void Move(float x, float y, float z);
+
 private:
+	DirectX::XMFLOAT3 myPosition = { 0.0f, 0.0f, 0.0f };
+
 	// Projection matrix
 	DirectX::XMMATRIX myProjection;
 

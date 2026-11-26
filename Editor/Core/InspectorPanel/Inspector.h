@@ -4,6 +4,7 @@
 #include <vector>
 #include <CrashOut/Scene/SceneSerializer.h>
 #include <CrashOut/Scene/Scene.h>
+
 class Inspector
 {
 public:

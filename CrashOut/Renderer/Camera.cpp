@@ -52,8 +52,13 @@ void Camera::Rotate(float pitch_radians, float yaw_radians)
 	position = XMVector3TransformCoord(position, rotation_matrix);
 
 	// Calculate camera's view
-	DirectX::XMVECTOR eye = position;
-	DirectX::XMVECTOR at = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+	DirectX::XMVECTOR offset =
+		DirectX::XMLoadFloat3(&myPosition);
+
+	DirectX::XMVECTOR eye =
+		DirectX::XMVectorAdd(position, offset);
+
+	DirectX::XMVECTOR at = offset;
 	DirectX::XMVECTOR up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 	myView = DirectX::XMMatrixLookAtLH(eye, at, up);
 }
@@ -86,4 +91,14 @@ void Camera::UpdateFov(float fov)
         throw std::runtime_error("Invalid FOV");
     myFieldOfViewDegrees = fov;
     if (myAspectRatio > 0) CalculateProjection();
+}
+
+
+void Camera::Move(float x, float y, float z)
+{
+	myPosition.x += x;
+	myPosition.y += y;
+	myPosition.z += z;
+
+	Rotate(0.0f, 0.0f);
 }

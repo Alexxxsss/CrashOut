@@ -5,8 +5,7 @@
 #include <CrashOut/Scene/Scene.h>
 
 
-
-struct Node;
+class Inspector;
 
 class Hierarchy
 {
@@ -16,7 +15,7 @@ public:
 
 
 	void Init();
-	void Update(CrashOut::Scene& scene, Entity& selectedEntity);
+	void Update(CrashOut::Scene& scene, Entity& selectedEntity, Inspector& inspector);
 	
 
 private:
