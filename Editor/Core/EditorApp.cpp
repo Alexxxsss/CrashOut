@@ -6,6 +6,7 @@
 #include "imgui.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx11.h"
+#include"InspectorPanel/Inspector.h"
 
 int main()
 {
@@ -36,6 +37,9 @@ int main()
 	ImGui_ImplDX11_Init(device, context);
 
 
+	Inspector inspector;
+
+
 	while (true)
 	{
 		editorWindow.UpdateOpenWindow();
@@ -56,9 +60,7 @@ int main()
 		ImGui::Text("Rendered inside a DX11 HWND!");
 		ImGui::End();
 
-		ImGui::Begin("Inspector");
-		ImGui::Text("Properties go here");
-		ImGui::End();
+		inspector.Update();
 
 		ImGui::Begin("Assets");
 		ImGui::Text("Properties go here");
