@@ -7,6 +7,11 @@
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx11.h"
 #include"InspectorPanel/Inspector.h"
+#include "HierarchyPanel/Hierarchy.h"
+#include "Scene/Scene.h"
+#include "Scene/SceneSerializer.h"
+#include "Resources/ResourceManager.h"
+#include "Core/AssetPath.h"
 
 int main()
 {
@@ -38,7 +43,16 @@ int main()
 
 
 	Inspector inspector;
+	Hierarchy hierarchy;
 
+	ResourceManager resources(renderer);
+	Entity selectedEntity;
+
+	auto scene = CrashOut::SceneSerializer::Load(
+		CrashOut::AssetPath("Scenes/StartScene.json"),
+		resources
+	);
+	
 
 	while (true)
 	{
@@ -56,11 +70,9 @@ int main()
 
 		ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 
-		ImGui::Begin("Hierarchy");
-		ImGui::Text("Rendered inside a DX11 HWND!");
-		ImGui::End();
+		hierarchy.Update(*scene, selectedEntity);
 
-		inspector.Update();
+		inspector.Update(*scene, selectedEntity);
 
 		ImGui::Begin("Assets");
 		ImGui::Text("Properties go here");

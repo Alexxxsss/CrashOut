@@ -20,6 +20,8 @@ public:
     virtual ~IComponentPool() = default;
 
     virtual void RemoveEntity(Entity entity) = 0;
+    virtual bool HasEntity(Entity entity) const = 0;
+
 };
 
 
@@ -47,6 +49,11 @@ public:
 
         data.erase(it);
     }
+
+    bool HasEntity(Entity entity) const override
+    {
+        return data.find(entity) != data.end();
+    }
 };
 
 class Registry
@@ -56,6 +63,22 @@ public:
 
     Registry(const Registry&) = delete;
     Registry& operator=(const Registry&) = delete;
+
+
+    std::vector<std::type_index> GetComponentTypes(Entity entity) const
+    {
+        std::vector<std::type_index> types;
+
+        for (const auto& [type, pool] : m_Pools)
+        {
+            if (pool->HasEntity(entity))
+            {
+                types.push_back(type);
+            }
+        }
+
+        return types;
+    }
 
     Entity CreateEntity()
     {
