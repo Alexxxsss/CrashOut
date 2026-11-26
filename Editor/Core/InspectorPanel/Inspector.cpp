@@ -3,11 +3,9 @@
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx11.h"
 #include <EditorVector.h>
+#include "Component.h"
 
-Inspector::Inspector()
-{
-	
-}
+Inspector::Inspector() = default;
 
 void Inspector::Init()
 {
@@ -16,10 +14,8 @@ void Inspector::Init()
 
 void Inspector::Update()
 {
-	ImGui::Begin("Inspector");
-	ImGui::Text("Transform");
-	ImGui::InputFloat3("Vector", &vec.x);
-	ImGui::End();
 
-	std::cout << vec.x << " : " << vec.y << " : " << vec.z << "\n";
+	comp01.Update();
+	comp02.Update();
+	comp03.Update();
 }
