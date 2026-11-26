@@ -16,6 +16,7 @@
 #include "Resources/ResourceManager.h"
 #include "Renderer/Texture.h"
 #include "Core/AssetPath.h"
+
 void OnResize(UINT width, UINT height);
 void Resized();
 const UINT myScreenWidth = 1280;
@@ -35,8 +36,7 @@ int main()
 	ID3D11Device* device = renderer.GetDevice();
 	ID3D11DeviceContext* context = renderer.GetContext();
 	IDXGISwapChain* swapChain = renderer.GetSwapChain();
-	ID3D11RenderTargetView* renderTargetView =
-		renderer.GetRenderTargetView();
+
 
 	RasterState resterState;
 	resterState.Init(&renderer);
@@ -103,14 +103,24 @@ int main()
 
 	
 
-	while (true)
+	while (editorWindow.UpdateOpenWindow())
 	{
-		editorWindow.UpdateOpenWindow();
+		if (editorWindow.IsMinimized())
+			continue;
+
+		if (editorWindow.WasResized())
+		{
+			renderer.Resize(
+				editorWindow.GetWidth(),
+				editorWindow.GetHeight()
+			);
+		}
+
 		renderer.BeginFrame(0.1f, 0.2f, 0.4f, 1.0f);
 
 		resterState.Use();
 
-
+		
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
@@ -212,7 +222,13 @@ int main()
 		///
 
 		ImGui::Render();
-		context->OMSetRenderTargets(1, &renderTargetView, nullptr);
+
+		auto* renderTargetView = renderer.GetRenderTargetView();
+
+		context->OMSetRenderTargets(
+			1, &renderTargetView, nullptr
+		);
+
 		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
