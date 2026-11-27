@@ -34,10 +34,10 @@ void Hierarchy::Update(CrashOut::Scene& scene, Entity &selectedEntity, Inspector
 
 		bool isOpen = ImGui::TreeNodeEx((void*)(intptr_t)i, flags, registry.GetComponent<NameComponent>(entity)->name.data());
 
-		if (ImGui::IsItemClicked())
+		if (ImGui::IsItemClicked() && selectedEntity != entity)
 		{
-			inspector.LoadInspectorComponents(scene, selectedEntity);
 			selectedEntity = entity;
+			inspector.LoadInspectorComponents(scene, selectedEntity);
 		}
 
 		//if (isOpen)
