@@ -133,7 +133,7 @@
           "cast_shadows": true
         },
         "Material": {
-          "texture_path": "Assets/Textures/PrototypeTexture.png"
+          "texture_path": "Assets/Textures/brick.png"
         },
         "BoxCollider": {
           "half_extents": [

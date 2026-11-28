@@ -18,7 +18,8 @@ namespace CrashOut
             p = p.lexically_normal();
             for (const auto& part : p)
                 if (part == "..") throw std::runtime_error("Asset path escapes root");
-            return p.generic_u8string();
+            auto utf8 = p.generic_u8string();
+            return std::string(utf8.begin(), utf8.end());
         }
     }
 

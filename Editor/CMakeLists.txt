@@ -1,20 +1,16 @@
-
 # ============================================================
 # Editor source files
 # ============================================================
-
 file(GLOB_RECURSE EDITOR_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/*.h"
 )
 
 # Exclude ImGui from the Editor source collection
-list(FILTER EDITOR_SOURCES EXCLUDE REGEX "/External/ImGui/")
-
+list(FILTER EDITOR_SOURCES EXCLUDE REGEX "/External/")
 # ============================================================
 # ImGui
 # ============================================================
-
 set(IMGUI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/External/ImGui")
 
 add_library(ImGui STATIC
@@ -33,26 +29,39 @@ target_include_directories(ImGui PUBLIC
 # ============================================================
 # ImGui backends
 # ============================================================
-
 # Example: Win32 + DirectX 11
 # Uncomment if CrashOut uses these APIs.
+target_sources(ImGui PRIVATE
+    ${IMGUI_DIR}/backends/imgui_impl_win32.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_dx11.cpp
+)
 
- target_sources(ImGui PRIVATE
-     ${IMGUI_DIR}/backends/imgui_impl_win32.cpp
-     ${IMGUI_DIR}/backends/imgui_impl_dx11.cpp
- )
+target_link_libraries(ImGui PRIVATE
+    d3d11
+    d3dcompiler
+    dwmapi
+    gdi32
+)
 
- target_link_libraries(ImGui PRIVATE
-     d3d11
-     d3dcompiler
-     dwmapi
-     gdi32
- )
+# ============================================================
+# Boost.PFR
+# ============================================================
+set(BOOST_PFR_DIR "${CMAKE_CURRENT_SOURCE_DIR}/External/Boost.PFR")
+
+add_library(BoostPFR INTERFACE)
+
+target_include_directories(BoostPFR SYSTEM INTERFACE
+    "${BOOST_PFR_DIR}/include"
+)
+
+target_compile_features(BoostPFR INTERFACE cxx_std_20)
+
+add_library(Boost::pfr ALIAS BoostPFR)
+
 
 # ============================================================
 # Editor executable
 # ============================================================
-
 add_executable(Editor
     ${EDITOR_SOURCES}
 )
@@ -60,6 +69,7 @@ add_executable(Editor
 target_link_libraries(Editor PRIVATE
     CrashOut
     ImGui
+    Boost::pfr
 )
 
 target_include_directories(Editor PRIVATE
@@ -70,7 +80,6 @@ target_include_directories(Editor PRIVATE
 # ============================================================
 # Visual Studio debugger settings
 # ============================================================
-
 set_target_properties(Editor PROPERTIES
     VS_DEBUGGER_COMMAND "${CMAKE_SOURCE_DIR}/bin/$<CONFIG>/Editor.exe"
     VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/bin/$<CONFIG>"
@@ -79,7 +88,6 @@ set_target_properties(Editor PROPERTIES
 # ============================================================
 # Copy shaders and assets
 # ============================================================
-
 add_custom_command(TARGET Editor POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${PROJECT_SOURCE_DIR}/CrashOut/Shaders"

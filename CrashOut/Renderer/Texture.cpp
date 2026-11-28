@@ -15,7 +15,7 @@ void Texture::Load(
     {
         throw std::runtime_error(
             "Texture file does not exist: " +
-            path.u8string()
+            path.string()
         );
     }
 
@@ -30,7 +30,7 @@ void Texture::Load(
     DX::Check(
         hr,
         "Failed to load texture: " +
-        path.u8string()
+        path.string()
     );
 }
 
