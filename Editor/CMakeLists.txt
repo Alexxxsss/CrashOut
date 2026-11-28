@@ -88,20 +88,15 @@ set_target_properties(Editor PROPERTIES
 # ============================================================
 # Copy shaders and assets
 # ============================================================
+
 add_custom_command(TARGET Editor POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
         "${PROJECT_SOURCE_DIR}/CrashOut/Shaders"
         "$<TARGET_FILE_DIR:Editor>/Shaders"
 
-    # Optional: copy shared/sample assets
-    # COMMAND ${CMAKE_COMMAND} -E copy_directory
-    #     "${CMAKE_CURRENT_SOURCE_DIR}/../Sandbox/Assets"
-    #     "$<TARGET_FILE_DIR:Editor>/Assets"
-
-    # Optional: copy scenes
-    # COMMAND ${CMAKE_COMMAND} -E copy_directory
-    #     "${CMAKE_CURRENT_SOURCE_DIR}/../Sandbox/Scenes"
-    #     "$<TARGET_FILE_DIR:Editor>/Scenes"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${PROJECT_SOURCE_DIR}/Sandbox/Assets"
+        "$<TARGET_FILE_DIR:Editor>/Assets"
 
     VERBATIM
 )

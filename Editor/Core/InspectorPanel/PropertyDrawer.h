@@ -106,12 +106,12 @@ namespace PropertyDrawer
         }
         else if constexpr (std::is_same_v<T, std::string>)
         {
-            //if (name == "assetPath" || name == "texturePath")
-            //{
-            //    ImGui::TextWrapped("%s: %s", text, value.c_str());
-            //
-            //    return {};
-            //}
+            if (name == "assetPath" || name == "texturePath")
+            {
+                ImGui::TextWrapped("%s: %s", text, value.c_str());
+            
+                return {};
+            }
 
             char buffer[256] = {};
 
