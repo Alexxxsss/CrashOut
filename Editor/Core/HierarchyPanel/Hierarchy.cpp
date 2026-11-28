@@ -20,10 +20,89 @@ void Hierarchy::Init()
 }
 void Hierarchy::Update(CrashOut::Scene& scene, Entity &selectedEntity, Inspector& inspector)
 {
+
+
 	auto& registry = scene.GetRegistry();
 
 	int i = 0;
 	ImGui::Begin("Hierarchy");
+
+	//if (ImGui::BeginMenu("File"))
+	//{
+	//	ImGui::MenuItem("Save"); ImGui::EndMenu();
+	//}
+	ImGui::SameLine(0.0f, 20.f);
+	static char entityName[128] = "New Entity";
+	if (ImGui::Button("New")) 
+	{
+		ImGui::OpenPopup("Create Entity");
+	}
+
+	if (ImGui::BeginPopupModal("Create Entity", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		ImGui::InputText("Name", entityName, sizeof(entityName));
+
+		if (ImGui::Button("Create"))
+		{
+			selectedEntity = scene.CreateEntity(entityName);
+			inspector.LoadInspectorComponents(scene, selectedEntity);
+
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("Cancel"))
+		{
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::EndPopup();
+	}
+
+	ImGui::SameLine();
+
+
+	if (ImGui::Button("Del")) 
+	{ 
+		ImGui::OpenPopup("Delete Entity");
+
+	}
+	if (ImGui::BeginPopupModal("Delete Entity", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		ImGui::Text(registry.GetComponent<NameComponent>(selectedEntity)->name.data());
+		if (ImGui::Button("Delete"))
+		{
+			scene.DestroyEntity(selectedEntity);
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("Cancel"))
+		{
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::EndPopup();
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+
 	for (Entity entity : scene.GetEntities())
 	{
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanAvailWidth;
@@ -50,3 +129,19 @@ void Hierarchy::Update(CrashOut::Scene& scene, Entity &selectedEntity, Inspector
 }
 
 
+bool SaveHierarchy(CrashOut::Scene& scene)
+{
+	try
+	{
+		CrashOut::SceneSerializer::Save(
+			scene,
+			CrashOut::AssetPath(L"Scenes/StartScene.json")
+		);
+		return true;
+	}
+	catch(const std::exception& e)
+	{
+		std::cout << "Could not save the scene! : " << e.what()<<"\n";
+		return false;
+	}
+}

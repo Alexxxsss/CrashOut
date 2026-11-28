@@ -2,6 +2,7 @@
 #include <EditorVector.h>
 #include <string>
 #include <iostream>
+#include <vector>
 #include <CrashOut/Scene/SceneSerializer.h>
 #include <CrashOut/Scene/Scene.h>
 
@@ -13,7 +14,7 @@ public:
 
 
 	void Init();
-	void Update(Entity& entityId);
+	void Update(Entity& entityId, CrashOut::Scene& scene, Component &aMyComponents);
 
 private:
 	CommonUtilities::Vector3<float> vec;

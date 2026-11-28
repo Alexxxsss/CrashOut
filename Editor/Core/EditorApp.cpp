@@ -123,6 +123,14 @@ int EditorApp::Update()
 	ImGui::Text("Properties go here");
 	ImGui::End();
 
+	if (ImGui::GetIO().KeyCtrl &&
+		ImGui::IsKeyPressed(ImGuiKey_S, false))
+	{
+		CrashOut::SceneSerializer::Save(
+			*scene,
+			CrashOut::AssetPath(L"Scenes/StartScene.json")
+		);
+	}
 
 	///
 	/// Starting

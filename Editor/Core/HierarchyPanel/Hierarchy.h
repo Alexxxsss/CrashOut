@@ -16,7 +16,7 @@ public:
 
 	void Init();
 	void Update(CrashOut::Scene& scene, Entity& selectedEntity, Inspector& inspector);
-	
+	bool SaveHierarchy(CrashOut::Scene& scene);
 
 private:
 	CrashOut::SceneSerializer ss;

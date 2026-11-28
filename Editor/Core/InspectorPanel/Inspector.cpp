@@ -16,12 +16,21 @@ void Inspector::Init()
 void Inspector::Update(CrashOut::Scene& scene, Entity& selectedEntity)
 {
 	
-	ImGui::Begin("Hierarchy");
+	ImGui::Begin("Inspector");
 
 	for (Component &component : allComponents)
 	{
-		component.Update(selectedEntity);
+		component.Update(selectedEntity, scene, component);
 	}
+
+	if (selectedEntity != 0)
+	{
+		if (ImGui::Button("Add Component!"))
+		{
+			std::cout << "SOmethingCool\n";
+		}
+	}
+
 
 	ImGui::End();
 
