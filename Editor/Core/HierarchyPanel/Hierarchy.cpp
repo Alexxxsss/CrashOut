@@ -75,6 +75,7 @@ void Hierarchy::Update(CrashOut::Scene& scene, Entity &selectedEntity, Inspector
 		{
 			scene.DestroyEntity(selectedEntity);
 			ImGui::CloseCurrentPopup();
+			SaveHierarchy(scene);
 		}
 
 		ImGui::SameLine();
@@ -129,7 +130,7 @@ void Hierarchy::Update(CrashOut::Scene& scene, Entity &selectedEntity, Inspector
 }
 
 
-bool SaveHierarchy(CrashOut::Scene& scene)
+bool Hierarchy::SaveHierarchy(CrashOut::Scene& scene)
 {
 	try
 	{
@@ -137,6 +138,7 @@ bool SaveHierarchy(CrashOut::Scene& scene)
 			scene,
 			CrashOut::AssetPath(L"Scenes/StartScene.json")
 		);
+		std::cout << "SAVED! \n";
 		return true;
 	}
 	catch(const std::exception& e)

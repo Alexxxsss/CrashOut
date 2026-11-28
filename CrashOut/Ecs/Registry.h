@@ -211,6 +211,26 @@ public:
         return true;
     }
 
+
+    bool RemoveComponent(Entity entity, std::type_index type)
+    {
+        if (!HasEntity(entity))
+            return false;
+
+        auto it = m_Pools.find(type);
+
+        if (it == m_Pools.end())
+            return false;
+
+        if (!it->second->HasEntity(entity))
+            return false;
+
+        it->second->RemoveEntity(entity);
+
+        return true;
+    }
+
+
     template<typename T>
     ComponentPool<T>* GetPool()
     {

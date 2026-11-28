@@ -130,6 +130,7 @@ int EditorApp::Update()
 			*scene,
 			CrashOut::AssetPath(L"Scenes/StartScene.json")
 		);
+		std::cout << "SAVED! \n";
 	}
 
 	///

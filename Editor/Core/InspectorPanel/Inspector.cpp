@@ -5,6 +5,7 @@
 #include <EditorVector.h>
 #include "Component.h"
 #include "../HierarchyPanel/Hierarchy.h"
+#include <CrashOut/Core/AssetPath.h>
 
 Inspector::Inspector() = default;
 
@@ -20,7 +21,9 @@ void Inspector::Update(CrashOut::Scene& scene, Entity& selectedEntity)
 
 	for (Component &component : allComponents)
 	{
-		component.Update(selectedEntity, scene, component);
+		component.Update(selectedEntity, scene, *this);
+		
+		
 	}
 
 	if (selectedEntity != 0)
@@ -30,7 +33,7 @@ void Inspector::Update(CrashOut::Scene& scene, Entity& selectedEntity)
 			std::cout << "SOmethingCool\n";
 		}
 	}
-
+	
 
 	ImGui::End();
 
@@ -43,7 +46,25 @@ void Inspector::LoadInspectorComponents(CrashOut::Scene& scene, Entity& selected
 	auto& registry = scene.GetRegistry();
 	for (const auto& type : registry.GetComponentTypes(selectedEntity))
 	{
-		Component component(type.name());
+		Component component(type);
 		allComponents.push_back(component);
+	}
+}
+
+bool Inspector::SaveInspector(CrashOut::Scene& scene)
+{
+	try
+	{
+		CrashOut::SceneSerializer::Save(
+			scene,
+			CrashOut::AssetPath(L"Scenes/StartScene.json")
+		);
+		std::cout << "SAVED! \n";
+		return true;
+	}
+	catch (const std::exception& e)
+	{
+		std::cout << "Could not save the scene! : " << e.what() << "\n";
+		return false;
 	}
 }

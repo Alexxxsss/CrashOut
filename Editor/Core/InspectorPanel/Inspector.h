@@ -15,6 +15,7 @@ public:
 	void Init();
 	void Update(CrashOut::Scene& scene, Entity& selectedEntity);
 	void LoadInspectorComponents(CrashOut::Scene& scene, Entity& selectedEntity);
+	bool SaveInspector(CrashOut::Scene& scene);
 
 private:
 	std::vector<Component> allComponents;
